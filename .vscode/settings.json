@@ -47,6 +47,7 @@
     "esp_timer.h": "c",
     "nvs_flash.h": "c",
     "esp_system.h": "c",
-    "esp_eth.h": "c"
+    "esp_eth.h": "c",
+    "connect.h": "c"
   }
 }

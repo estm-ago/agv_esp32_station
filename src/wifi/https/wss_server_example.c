@@ -1,12 +1,3 @@
-/* Simple HTTP + SSL + WS Server Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 #include <esp_event.h>
 #include <esp_log.h>
 #include <esp_system.h>
@@ -20,10 +11,6 @@
 #include "wifi/https/server.h"
 #include "wifi/https/keep_alive.h"
 #include "sdkconfig.h"
-
-#if !CONFIG_HTTPD_WS_SUPPORT
-#error This example cannot be used unless HTTPD_WS_SUPPORT is enabled in esp-http-server component configuration
-#endif
 
 struct async_resp_arg {
     httpd_handle_t hd;
@@ -293,11 +280,7 @@ void server_main(void)
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 
-    // ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &connect_handler, &server));
-    // ESP_ERROR_CHECK(esp_event_handler_register(ETH_EVENT, ETHERNET_EVENT_DISCONNECTED, &disconnect_handler, &server));
+    server = start_wss_echo_server();
 
-    /* This function demonstrates periodic sending Websocket messages
-     * to all connected clients to this server
-     */
     wss_server_send_messages(&server);
 }

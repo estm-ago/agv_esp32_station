@@ -13,21 +13,24 @@
 // #include "lwip/sys.h"
 // #include <lwip/sockets.h>
 // #include "lwip/netdb.h"
+#include "wifi/main.h"
+#include "wifi/tcp_transceive.h"
 #include "wifi/http/server.h"
 #include "wifi/https/server.h"
-#include "wifi/connect.h"
-#include "wifi/tcp_transceive.h"
 #include "uart/transceive.h"
 #include "uart/packet.h"
 
-static const char *TAG = "main";
+static const char *TAG = "user_main";
 
 void app_main(void) {
+    ESP_LOGI(TAG, "app_main");
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(esp_netif_init());
-    wifi_setup();
-    // server_main();
+    wifi_init_sta();
+    wifi_connect_sta();
+
+    server_main();
     // wifi_transceive_setup();
     // uart_setup();
     // http_start_server();
