@@ -1,5 +1,3 @@
-.vscode/
+.vscode
 build/
 sdkconfig.old
-
-third_party/http_parser

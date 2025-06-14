@@ -4,7 +4,6 @@ idf_component_register(
     SRCS ${SRC_SRCS}
     INCLUDE_DIRS "../include"
     REQUIRES
-        third_party
         nvs_flash
         driver
         esp_wifi
