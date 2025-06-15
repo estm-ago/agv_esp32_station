@@ -7,12 +7,12 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include "wifi/https/keep_alive.h"
 #include <esp_log.h>
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/task.h>
-#include "wifi/https/keep_alive.h"
 #include <esp_timer.h>
 
 typedef enum {
@@ -43,7 +43,7 @@ typedef struct wss_keep_alive_storage {
 
 typedef struct wss_keep_alive_storage* wss_keep_alive_t;
 
-static const char *TAG = "wss_keep_alive";
+static const char *TAG = "user_wss_keep_alive";
 
 static uint64_t _tick_get_ms(void)
 {

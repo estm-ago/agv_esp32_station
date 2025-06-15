@@ -1,5 +1,4 @@
-#ifndef PRIORITITES_SEQU_H
-#define PRIORITITES_SEQU_H
+#pragma once
 
 #include "freertos/FreeRTOSConfig.h"
 
@@ -10,4 +9,3 @@
 #define WIFI_UDP_WRITE_TASK_PRIO_SEQU       configMAX_PRIORITIES-5
 #define WIFI_TCP_WRITE_TASK_PRIO_SEQU       configMAX_PRIORITIES-6
 
-#endif

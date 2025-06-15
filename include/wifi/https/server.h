@@ -1,6 +1,3 @@
-#ifndef WIFI_HTTPS_SERVER_H
-#define WIFI_HTTPS_SERVER_H
+#pragma once
 
 void server_main(void);
-
-#endif

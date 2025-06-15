@@ -1,5 +1,4 @@
-#ifndef VEC_MOD_H
-#define VEC_MOD_H
+#pragma once
 // ----------------------------------------------------------------------------------------------------
 #include <stdint.h>
 #include <stdbool.h>
@@ -22,4 +21,3 @@ bool vec_u8_push_f32(VecU8 *self, float value);
 bool vec_u8_rm_range(VecU8 *self, uint16_t offset, uint16_t size);
 VecU8 vec_u8_new(void);
 
-#endif

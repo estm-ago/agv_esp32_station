@@ -1,5 +1,4 @@
-#ifndef DATA_STORAGE_H
-#define DATA_STORAGE_H
+#pragma once
 
 #include "vec_mod.h"
 
@@ -9,4 +8,3 @@ typedef struct DataStorage {
 } DataStorage;
 extern DataStorage data_storeage;
 
-#endif

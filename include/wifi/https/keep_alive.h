@@ -8,6 +8,11 @@
 */
 #pragma once
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <esp_err.h>
+#include <freertos/FreeRTOS.h> 
+
 #define KEEP_ALIVE_CONFIG_DEFAULT() \
     { \
     .max_clients = 10,                      \

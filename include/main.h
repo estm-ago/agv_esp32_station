@@ -1,6 +1,4 @@
-#ifndef MAIN_H
-#define MAIN_H
+#pragma once
 
 void app_main(void);
 
-#endif

@@ -1,5 +1,4 @@
-#ifndef WIFI_PACKET_MOD_H
-#define WIFI_PACKET_MOD_H
+#pragma once
 
 #include "vec_mod.h"
 #include <esp_netif.h>
@@ -30,4 +29,3 @@ bool wifi_trcv_buffer_get_front(WifiTrcvBuf *buffer, WifiPacket *packet);
 bool wifi_trcv_buffer_push(WifiTrcvBuf *buffer, const WifiPacket *packet);
 bool wifi_trcv_buffer_pop(WifiTrcvBuf *buffer, WifiPacket *packet);
 
-#endif

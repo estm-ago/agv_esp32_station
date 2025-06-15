@@ -1,5 +1,4 @@
-#ifndef UART_ASYNC_H
-#define UART_ASYNC_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -14,4 +13,3 @@ extern TransceiveFlags transceive_flags;
 
 void uart_setup(void);
 
-#endif

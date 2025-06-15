@@ -1,6 +1,4 @@
-#ifndef WIFI_PACKET_PROC_MOD_H
-#define WIFI_PACKET_PROC_MOD_H
+#pragma once
 
 #include "wifi/packet.h"
 
-#endif

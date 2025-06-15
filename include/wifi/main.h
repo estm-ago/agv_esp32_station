@@ -1,5 +1,4 @@
-#ifndef WIFI_CONNECT_H
-#define WIFI_CONNECT_H
+#pragma once
 
 #define WIFI_DHCP "192.168.0.20"
 #define WIFI_SSID "HY-TPL-BF94"
@@ -9,4 +8,3 @@
 void wifi_init_sta(void);
 void wifi_connect_sta(void);
 
-#endif
