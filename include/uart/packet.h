@@ -21,4 +21,4 @@ bool uart_pkt_add_data(UartPacket *self, VecU8 *vec_u8);
 bool uart_pkt_get_data(const UartPacket *self, VecU8 *vec_u8);
 bool uart_pkt_pack(UartPacket *self, VecU8 *vec_u8);
 bool uart_pkt_unpack(const UartPacket *self, VecU8 *vec_u8);
-UartPacket uart_packet_new(void);
+UartPacket uart_pkt_new(void);

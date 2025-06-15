@@ -19,40 +19,10 @@ void uart_transmit_pkt_proc(void) {
     vec_u8_push(&new_vec, &(uint8_t){0x10}, 1);
     bool new_vec_wri_flag = false;
     if (new_vec_wri_flag) {
-        UartPacket new_packet = uart_packet_new();
+        UartPacket new_packet = uart_pkt_new();
         uart_pkt_add_data(&new_packet, &new_vec);
         uart_trcv_buf_push(&global_variable.uart_trsm_pkt_buf, &new_packet);
     };
-}
-
-void uart_re_pkt_proc_data_store(VecU8 *vec_u8);
-
-/**
- * @brief 從接收緩衝區反覆讀取封包並處理
- *        Pop packets from receive buffer and process them
- *
- * @param count 單次最大處理封包數量 (input maximum number of packets to process per time)
- * @return void
- */
-void uart_receive_pkt_proc(uint8_t count) {
-    uint8_t i;
-    for (i = 0; i < 5; i++){
-        UartPacket packet = uart_packet_new();
-        if (!uart_trcv_buf_pop_front(&global_variable.uart_recv_pkt_buf, &packet)) {
-            break;
-        }
-        VecU8 vec_u8 = vec_u8_new();
-        uart_pkt_get_data(&packet, &vec_u8);
-        uint8_t code = vec_u8.data[0];
-        vec_u8_rm_range(&vec_u8, 0, 1);
-        switch (code) {
-            case CMD_CODE_DATA_TRRE:
-                uart_re_pkt_proc_data_store(&vec_u8);
-                break;
-            default:
-                break;
-        }
-    }
 }
 
 /**
@@ -102,8 +72,36 @@ void uart_re_pkt_proc_data_store(VecU8 *vec_u8) {
         if (!data_proc_flag) break;
     }
     if (new_vec_wri_flag) {
-        UartPacket new_packet = uart_packet_new();
+        UartPacket new_packet = uart_pkt_new();
         uart_pkt_add_data(&new_packet, &new_vec);
         uart_trcv_buf_push(&global_variable.uart_trsm_pkt_buf, &new_packet);
+    }
+}
+
+/**
+ * @brief 從接收緩衝區反覆讀取封包並處理
+ *        Pop packets from receive buffer and process them
+ *
+ * @param count 單次最大處理封包數量 (input maximum number of packets to process per time)
+ * @return void
+ */
+void uart_receive_pkt_proc(uint8_t count) {
+    uint8_t i;
+    for (i = 0; i < 5; i++){
+        UartPacket packet = uart_pkt_new();
+        if (!uart_trcv_buf_pop_front(&global_variable.uart_recv_pkt_buf, &packet)) {
+            break;
+        }
+        VecU8 vec_u8 = vec_u8_new();
+        uart_pkt_get_data(&packet, &vec_u8);
+        uint8_t code = vec_u8.data[0];
+        vec_u8_rm_range(&vec_u8, 0, 1);
+        switch (code) {
+            case CMD_CODE_DATA_TRRE:
+                uart_re_pkt_proc_data_store(&vec_u8);
+                break;
+            default:
+                break;
+        }
     }
 }

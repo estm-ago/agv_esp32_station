@@ -69,7 +69,7 @@ bool uart_pkt_unpack(const UartPacket *self, VecU8 *vec_u8) {
  *
  * @return UartPacket 已封裝的 UART 封包 (packed UART packet)
  */
-UartPacket uart_packet_new(void) {
+UartPacket uart_pkt_new(void) {
     UartPacket pkt = {0};
     pkt.start       = PACKET_START_CODE;
     pkt.end         = PACKET_END_CODE;

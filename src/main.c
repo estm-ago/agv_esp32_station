@@ -30,8 +30,8 @@ void app_main(void) {
     wifi_init_sta();
     wifi_connect_sta();
 
-    server_main();
     uart_setup();
+    server_main();
 
     while (1) {
         // ESP_LOGI(TAG, "Running main loop...");

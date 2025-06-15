@@ -11,6 +11,8 @@
 #include "uart/packet.h"
 #include "uart/trcv_buffer.h"
 
+static const char *TAG = "user_uart_main";
+
 static const int RX_BUF_SIZE = VECU8_MAX_CAPACITY;
 
 #define TXD_PIN (GPIO_NUM_4)
@@ -34,7 +36,7 @@ static void uart_write_task(void *arg) {
     esp_log_level_set(TX_TASK_TAG, ESP_LOG_INFO);
 
     while (1) {
-        UartPacket packet = uart_packet_new();
+        UartPacket packet = uart_pkt_new();
         if (!uart_trcv_buf_get_front(&global_variable.uart_trsm_pkt_buf, &packet)) {
             vTaskDelay(pdMS_TO_TICKS(10));
             continue;
@@ -59,7 +61,7 @@ static bool uart_read_t(const char* logName, UartPacket *packet) {
     ESP_LOG_BUFFER_HEXDUMP(logName, data, len, ESP_LOG_INFO);
     VecU8 vec_u8 = vec_u8_new();
     vec_u8_push(&vec_u8, &data, len);
-    UartPacket new = uart_packet_new();
+    UartPacket new = uart_pkt_new();
     if (uart_pkt_pack(&new, &vec_u8)) {
         ESP_LOGI(logName, "Pack %d bytes", len);
     }
@@ -73,7 +75,7 @@ static void uart_read_task(void *arg) {
     ESP_LOGI(RX_TASK_TAG, "Uart read task start");
 
     while (1) {
-        UartPacket packet = uart_packet_new();
+        UartPacket packet = uart_pkt_new();
         if (!uart_read_t(RX_TASK_TAG, &packet)) {
             continue;
         }
@@ -85,11 +87,13 @@ static void uart_read_task(void *arg) {
 }
 
 static void uart_tasks_spawn(void) {
+    ESP_LOGI(TAG, "uart_tasks_spawn");
     xTaskCreate(uart_read_task, "uart_rx_task", 4096, NULL, UART_READ_TASK_PRIO_SEQU, NULL);
     xTaskCreate(uart_write_task, "uart_tx_task", 4096, NULL, UART_WRITE_TASK_PRIO_SEQU, NULL);
 }
 
 void uart_setup(void) {
+    ESP_LOGI(TAG, "uart_setup");
     uart_driver_install(UART_NUM_1, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
     const uart_config_t uart_config = {
         .baud_rate = 115200,
