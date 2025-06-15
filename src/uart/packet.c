@@ -1,7 +1,5 @@
 #include "uart/packet.h"
 
-// ----------------------------------------------------------------------------------------------------
-
 /**
  * @brief 向現有 UART 封包中新增資料
  *        Add data to existing UART packet
@@ -76,75 +74,4 @@ UartPacket uart_packet_new(void) {
     pkt.start       = PACKET_START_CODE;
     pkt.end         = PACKET_END_CODE;
     return pkt;
-}
-
-// ----------------------------------------------------------------------------------------------------
-
-/**
- * @brief 將封包推入環形緩衝區，若已滿則返回 false
- *        Push a packet into the ring buffer; return false if buffer is full
- *
- * @param self 指向環形緩衝區的指標 (input/output ring buffer)
- * @param pkt 要推入緩衝區的 UART 封包 (input UART packet)
- * @return bool 是否推入成功 (true if push successful, false if buffer full)
- */
-bool uart_trcv_buf_push(UartTrcvBuf *self, const UartPacket *pkt) {
-    if (self->len >= UART_TRCV_BUF_CAP) return false;
-    uint8_t tail = (self->head + self->len) % UART_TRCV_BUF_CAP;
-    self->packets[tail] = *pkt;
-    self->len++;
-    return true;
-}
-
-bool uart_trcv_buf_get_front(const UartTrcvBuf *self, UartPacket *pkt) {
-    if (self->len == 0) return 0;
-    *pkt = self->packets[self->head];
-    return 1;
-}
-
-/**
- * @brief 從環形緩衝區彈出一個封包資料
- *        Pop a packet from the ring buffer
- *
- * @param self 指向環形緩衝區的指標 (input/output ring buffer)
- * @param pkt 輸出參數，接收彈出的 UART 封包 (output popped UART packet)
- * @return bool 是否彈出成功 (true if pop successful, false if buffer empty)
- */
-bool uart_trcv_buf_pop_front(UartTrcvBuf *self, UartPacket *pkt) {
-    if (self->len == 0) return 0;
-    if (pkt != NULL) *pkt = self->packets[self->head];
-    if (--self->len == 0) {
-        self->head = 0;
-    } else {
-        self->head = (self->head + 1) % UART_TRCV_BUF_CAP;
-    }
-    return 1;
-}
-
-/**
- * @brief 建立傳輸/接收環形緩衝區，初始化頭指標與計數
- *        Create a transmit/receive ring buffer, initialize head index and length
- *
- * @return UartTrcvBuf 初始化後的環形緩衝區 (initialized ring buffer)
- */
-UartTrcvBuf uart_trcv_buf_new(void) {
-    UartTrcvBuf buf = {0};
-    return buf;
-}
-
-/**
- * @brief 全域傳輸緩衝區
- *        Global transmit ring buffer
- */
-UartTrcvBuf uart_trsm_pkt_buf;
-
-/**
- * @brief 全域接收緩衝區
- *        Global receive ring buffer
- */
-UartTrcvBuf uart_recv_pkt_buf;
-
-void uart_trcv_buf_init(void) {
-    uart_trsm_pkt_buf = uart_trcv_buf_new();
-    uart_recv_pkt_buf = uart_trcv_buf_new();
 }

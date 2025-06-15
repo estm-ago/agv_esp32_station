@@ -1,5 +1,6 @@
 #include "uart/packet_proc.h"
-#include "uart/transceive.h"
+#include "global_variable.h"
+#include "uart/trcv_buffer.h"
 #include "mcu_const.h"
 
 float f32_test = 1;
@@ -9,7 +10,7 @@ uint16_t u16_test = 1;
  * @brief 組合並傳輸封包至傳輸緩衝區
  *        Assemble and transmit packet into transfer buffer
  *
- * @note 根據 transceive_flags 決定回應內容
+ * @note 根據 global_variable.transceive_flags 決定回應內容
  *
  * @return void
  */
@@ -20,7 +21,7 @@ void uart_transmit_pkt_proc(void) {
     if (new_vec_wri_flag) {
         UartPacket new_packet = uart_packet_new();
         uart_pkt_add_data(&new_packet, &new_vec);
-        uart_trcv_buf_push(&uart_trsm_pkt_buf, &new_packet);
+        uart_trcv_buf_push(&global_variable.uart_trsm_pkt_buf, &new_packet);
     };
 }
 
@@ -37,7 +38,7 @@ void uart_receive_pkt_proc(uint8_t count) {
     uint8_t i;
     for (i = 0; i < 5; i++){
         UartPacket packet = uart_packet_new();
-        if (!uart_trcv_buf_pop_front(&uart_recv_pkt_buf, &packet)) {
+        if (!uart_trcv_buf_pop_front(&global_variable.uart_recv_pkt_buf, &packet)) {
             break;
         }
         VecU8 vec_u8 = vec_u8_new();
@@ -71,7 +72,7 @@ void uart_re_pkt_proc_data_store(VecU8 *vec_u8) {
         if (vec_u8_starts_with(vec_u8, CMD_RIGHT_SPEED_STOP, sizeof(CMD_RIGHT_SPEED_STOP))) {
             vec_u8_rm_range(vec_u8, 0, sizeof(CMD_RIGHT_SPEED_STOP));
             data_proc_flag = true;
-            transceive_flags.right_speed = false;
+            global_variable.transceive_flags.right_speed = false;
         }
         if (vec_u8_starts_with(vec_u8, CMD_RIGHT_SPEED_ONCE, sizeof(CMD_RIGHT_SPEED_ONCE))) {
             vec_u8_rm_range(vec_u8, 0, sizeof(CMD_RIGHT_SPEED_ONCE));
@@ -81,12 +82,12 @@ void uart_re_pkt_proc_data_store(VecU8 *vec_u8) {
         if (vec_u8_starts_with(vec_u8, CMD_RIGHT_SPEED_START, sizeof(CMD_RIGHT_SPEED_START))) {
             vec_u8_rm_range(vec_u8, 0, sizeof(CMD_RIGHT_SPEED_START));
             data_proc_flag = true;
-            transceive_flags.right_speed = true;
+            global_variable.transceive_flags.right_speed = true;
         }
         if (vec_u8_starts_with(vec_u8, CMD_RIGHT_ADC_STOP, sizeof(CMD_RIGHT_ADC_STOP))) {
             vec_u8_rm_range(vec_u8, 0, sizeof(CMD_RIGHT_ADC_STOP));
             data_proc_flag = true;
-            transceive_flags.right_adc = false;
+            global_variable.transceive_flags.right_adc = false;
         }
         if (vec_u8_starts_with(vec_u8, CMD_RIGHT_ADC_ONCE, sizeof(CMD_RIGHT_ADC_ONCE))) {
             vec_u8_rm_range(vec_u8, 0, sizeof(CMD_RIGHT_ADC_ONCE));
@@ -96,13 +97,13 @@ void uart_re_pkt_proc_data_store(VecU8 *vec_u8) {
         if (vec_u8_starts_with(vec_u8, CMD_RIGHT_ADC_START, sizeof(CMD_RIGHT_ADC_START))) {
             vec_u8_rm_range(vec_u8, 0, sizeof(CMD_RIGHT_ADC_START));
             data_proc_flag = true;
-            transceive_flags.right_adc = true;
+            global_variable.transceive_flags.right_adc = true;
         }
         if (!data_proc_flag) break;
     }
     if (new_vec_wri_flag) {
         UartPacket new_packet = uart_packet_new();
         uart_pkt_add_data(&new_packet, &new_vec);
-        uart_trcv_buf_push(&uart_trsm_pkt_buf, &new_packet);
+        uart_trcv_buf_push(&global_variable.uart_trsm_pkt_buf, &new_packet);
     }
 }

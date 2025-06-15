@@ -1,5 +1,4 @@
-#include "uart/transceive.h"
-#include "uart/packet.h"
+#include "uart/main.h"
 #include "prioritites_sequ.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -8,6 +7,9 @@
 #include "driver/uart.h"
 #include "string.h"
 #include "driver/gpio.h"
+#include "global_variable.h"
+#include "uart/packet.h"
+#include "uart/trcv_buffer.h"
 
 static const int RX_BUF_SIZE = VECU8_MAX_CAPACITY;
 
@@ -16,32 +18,7 @@ static const int RX_BUF_SIZE = VECU8_MAX_CAPACITY;
 
 #define UART_READ_TIMEOUT_MS 10
 
-/**
- * @brief 傳輸/接收操作旗標
- *        Transmit/receive operation flags
- *
- * @details 控制資料處理流程 (Control data processing flow)
- */
-TransceiveFlags transceive_flags = {0};
-
-static void uart_tasks_spawn(void);
-void uart_setup(void) {
-    uart_trcv_buf_init();
-    uart_driver_install(UART_NUM_1, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
-    const uart_config_t uart_config = {
-        .baud_rate = 115200,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-        .source_clk = UART_SCLK_DEFAULT,
-    };
-    uart_param_config(UART_NUM_1, &uart_config);
-    uart_set_pin(UART_NUM_1, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    uart_tasks_spawn();
-}
-
-bool uart_write_t(const char* logName, UartPacket *packet) {
+static bool uart_write_t(const char* logName, UartPacket *packet) {
     VecU8 vec_u8 = vec_u8_new();
     uart_pkt_unpack(packet, &vec_u8);
     int len = uart_write_bytes(UART_NUM_1, vec_u8.data, vec_u8.len);
@@ -58,7 +35,7 @@ static void uart_write_task(void *arg) {
 
     while (1) {
         UartPacket packet = uart_packet_new();
-        if (!uart_trcv_buf_get_front(&uart_trsm_pkt_buf, &packet)) {
+        if (!uart_trcv_buf_get_front(&global_variable.uart_trsm_pkt_buf, &packet)) {
             vTaskDelay(pdMS_TO_TICKS(10));
             continue;
         }
@@ -66,7 +43,7 @@ static void uart_write_task(void *arg) {
             vTaskDelay(pdMS_TO_TICKS(10));
             continue;
         }
-        uart_trcv_buf_pop_front(&uart_trsm_pkt_buf, NULL);
+        uart_trcv_buf_pop_front(&global_variable.uart_trsm_pkt_buf, NULL);
     }
     
     vTaskDelete(NULL);
@@ -100,8 +77,8 @@ static void uart_read_task(void *arg) {
         if (!uart_read_t(RX_TASK_TAG, &packet)) {
             continue;
         }
-        uart_trcv_buf_push(&uart_recv_pkt_buf, &packet);
-        ESP_LOGI(RX_TASK_TAG, "Buf len: %d", uart_recv_pkt_buf.len);
+        uart_trcv_buf_push(&global_variable.uart_recv_pkt_buf, &packet);
+        ESP_LOGI(RX_TASK_TAG, "Buf len: %d", global_variable.uart_recv_pkt_buf.len);
     }
 
     vTaskDelete(NULL);
@@ -110,4 +87,19 @@ static void uart_read_task(void *arg) {
 static void uart_tasks_spawn(void) {
     xTaskCreate(uart_read_task, "uart_rx_task", 4096, NULL, UART_READ_TASK_PRIO_SEQU, NULL);
     xTaskCreate(uart_write_task, "uart_tx_task", 4096, NULL, UART_WRITE_TASK_PRIO_SEQU, NULL);
+}
+
+void uart_setup(void) {
+    uart_driver_install(UART_NUM_1, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
+    const uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+    uart_param_config(UART_NUM_1, &uart_config);
+    uart_set_pin(UART_NUM_1, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    uart_tasks_spawn();
 }

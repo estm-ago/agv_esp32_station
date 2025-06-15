@@ -15,9 +15,8 @@
 // #include "lwip/netdb.h"
 #include "wifi/main.h"
 #include "wifi/tcp_transceive.h"
-#include "wifi/http/server.h"
 #include "wifi/https/server.h"
-#include "uart/transceive.h"
+#include "uart/main.h"
 #include "uart/packet.h"
 
 static const char *TAG = "user_main";
@@ -32,9 +31,7 @@ void app_main(void) {
     wifi_connect_sta();
 
     server_main();
-    // wifi_transceive_setup();
-    // uart_setup();
-    // http_start_server();
+    uart_setup();
 
     while (1) {
         // ESP_LOGI(TAG, "Running main loop...");

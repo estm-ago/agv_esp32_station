@@ -21,36 +21,12 @@ struct async_resp_arg {
 static const char *TAG = "user_wss_echo_server";
 static const size_t max_clients = 4;
 
-static httpd_handle_t server = NULL;
+static httpd_handle_t https_server = NULL;
 
-esp_err_t wss_open_fd(httpd_handle_t hd, int sockfd)
-{
-    ESP_LOGI(TAG, "New client connected %d", sockfd);
-    wss_keep_alive_t h = httpd_get_global_user_ctx(hd);
-    return wss_keep_alive_add_client(h, sockfd);
-}
-
-void wss_close_fd(httpd_handle_t hd, int sockfd)
-{
-    ESP_LOGI(TAG, "Client disconnected %d", sockfd);
-    wss_keep_alive_t h = httpd_get_global_user_ctx(hd);
-    wss_keep_alive_remove_client(h, sockfd);
-    close(sockfd);
-}
-
-static void send_hello(void *arg) {
-    static const char * data = "Hello client";
-    struct async_resp_arg *resp_arg = arg;
-    httpd_handle_t hd = resp_arg->hd;
-    int fd = resp_arg->fd;
-    httpd_ws_frame_t ws_pkt;
-    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = (uint8_t*)data;
-    ws_pkt.len = strlen(data);
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-
-    httpd_ws_send_frame_async(hd, fd, &ws_pkt);
-    free(resp_arg);
+static bool client_not_alive_cb(wss_keep_alive_t h, int fd) {
+    ESP_LOGE(TAG, "Client not alive, closing fd %d", fd);
+    httpd_sess_trigger_close(wss_keep_alive_get_user_ctx(h), fd);
+    return true;
 }
 
 static void send_ping(void *arg) {
@@ -67,13 +43,7 @@ static void send_ping(void *arg) {
     free(resp_arg);
 }
 
-bool client_not_alive_cb(wss_keep_alive_t h, int fd) {
-    ESP_LOGE(TAG, "Client not alive, closing fd %d", fd);
-    httpd_sess_trigger_close(wss_keep_alive_get_user_ctx(h), fd);
-    return true;
-}
-
-bool check_client_alive_cb(wss_keep_alive_t h, int fd) {
+static bool check_client_alive_cb(wss_keep_alive_t h, int fd) {
     ESP_LOGD(TAG, "Checking if client (fd=%d) is alive", fd);
     struct async_resp_arg *resp_arg = malloc(sizeof(struct async_resp_arg));
     assert(resp_arg != NULL);
@@ -86,7 +56,21 @@ bool check_client_alive_cb(wss_keep_alive_t h, int fd) {
     return true;
 }
 
-static httpd_handle_t start_wss_echo_server(void) {
+static esp_err_t wss_open_fd(httpd_handle_t hd, int sockfd) {
+    ESP_LOGI(TAG, "New client connected %d", sockfd);
+    wss_keep_alive_t h = httpd_get_global_user_ctx(hd);
+    return wss_keep_alive_add_client(h, sockfd);
+}
+
+static void wss_close_fd(httpd_handle_t hd, int sockfd) {
+    ESP_LOGI(TAG, "Client disconnected %d", sockfd);
+    wss_keep_alive_t h = httpd_get_global_user_ctx(hd);
+    wss_keep_alive_remove_client(h, sockfd);
+    close(sockfd);
+}
+
+static esp_err_t https_server_start_inner(void) {
+    if (https_server != NULL) return ESP_ERR_INVALID_STATE;
     // Prepare keep-alive engine
     wss_keep_alive_config_t keep_alive_config = KEEP_ALIVE_CONFIG_DEFAULT();
     keep_alive_config.max_clients = max_clients;
@@ -95,7 +79,7 @@ static httpd_handle_t start_wss_echo_server(void) {
     wss_keep_alive_t keep_alive = wss_keep_alive_start(&keep_alive_config);
 
     // Start the httpd server
-    httpd_handle_t server = NULL;
+    https_server = NULL;
     ESP_LOGI(TAG, "Starting server");
 
     httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
@@ -114,25 +98,36 @@ static httpd_handle_t start_wss_echo_server(void) {
     conf.prvtkey_pem = prvtkey_pem_start;
     conf.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
 
-    esp_err_t ret = httpd_ssl_start(&server, &conf);
+    esp_err_t ret = httpd_ssl_start(&https_server, &conf);
     if (ESP_OK != ret) {
         ESP_LOGI(TAG, "Error starting server!");
-        return NULL;
+        return ESP_FAIL;
     }
 
     // Set URI handlers
     ESP_LOGI(TAG, "Registering URI handlers");
-    httpd_register_uri_handler(server, &ws);
-    wss_keep_alive_set_user_ctx(keep_alive, server);
+    httpd_register_uri_handler(https_server, &ws);
 
-    return server;
+    wss_keep_alive_set_user_ctx(keep_alive, https_server);
+    return ESP_OK;
 }
 
-static esp_err_t stop_wss_echo_server(httpd_handle_t server) {
-    // Stop keep alive thread
-    wss_keep_alive_stop(httpd_get_global_user_ctx(server));
+static esp_err_t https_server_stop_inner(void) {
+    if (https_server == NULL) return ESP_ERR_INVALID_STATE;
+    wss_keep_alive_stop(httpd_get_global_user_ctx(https_server));
     // Stop the httpd server
-    return httpd_ssl_stop(server);
+    return httpd_ssl_stop(https_server);
+}
+
+static void connect_handler(
+    void* arg, esp_event_base_t event_base,
+    int32_t event_id, void* event_data
+) {
+    httpd_handle_t* server = (httpd_handle_t*) arg;
+    if (*server == NULL) {
+        https_server_start_inner();
+        *server = https_server;
+    }
 }
 
 static void disconnect_handler(
@@ -143,21 +138,40 @@ static void disconnect_handler(
     if (*server == NULL) {
         return;
     }
-    if (stop_wss_echo_server(*server) == ESP_OK) {
+    if (https_server_stop_inner() == ESP_OK) {
         *server = NULL;
     } else {
         ESP_LOGE(TAG, "Failed to stop https server");
     }
 }
 
-static void connect_handler(
-    void* arg, esp_event_base_t event_base,
-    int32_t event_id, void* event_data
-) {
-    httpd_handle_t* server = (httpd_handle_t*) arg;
-    if (*server == NULL) {
-        *server = start_wss_echo_server();
-    }
+esp_err_t https_server_start(void) {
+    esp_err_t result = https_server_start_inner();
+    if (result != ESP_OK) return result;
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &https_server));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &https_server));
+    return ESP_OK;
+}
+
+esp_err_t https_server_stop(void) {
+    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, connect_handler));
+    ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, disconnect_handler));
+    return https_server_stop_inner();
+}
+
+static void send_hello(void *arg) {
+    static const char * data = "Hello client";
+    struct async_resp_arg *resp_arg = arg;
+    httpd_handle_t hd = resp_arg->hd;
+    int fd = resp_arg->fd;
+    httpd_ws_frame_t ws_pkt;
+    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
+    ws_pkt.payload = (uint8_t*)data;
+    ws_pkt.len = strlen(data);
+    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+
+    httpd_ws_send_frame_async(hd, fd, &ws_pkt);
+    free(resp_arg);
 }
 
 // Get all clients and send async message
@@ -198,10 +212,8 @@ static void wss_server_send_messages(httpd_handle_t* server) {
 }
 
 void server_main(void) {
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 
-    server = start_wss_echo_server();
+    https_server_start();
 
-    wss_server_send_messages(&server);
+    wss_server_send_messages(&https_server);
 }
