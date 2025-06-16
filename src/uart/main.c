@@ -21,7 +21,7 @@ static const int RX_BUF_SIZE = VECU8_MAX_CAPACITY;
 #define UART_READ_TIMEOUT_MS 10
 
 static bool uart_write_t(const char* logName, UartPacket *packet) {
-    VecU8 vec_u8 = vec_u8_new();
+    VecU8 vec_u8 = VEC_U8_NEW();
     uart_pkt_unpack(packet, &vec_u8);
     int len = uart_write_bytes(UART_NUM_1, vec_u8.data, vec_u8.len);
     if (len <= 0) {
@@ -36,8 +36,8 @@ static void uart_write_task(void *arg) {
     esp_log_level_set(TX_TASK_TAG, ESP_LOG_INFO);
 
     while (1) {
-        UartPacket packet = uart_pkt_new();
-        if (!uart_trcv_buf_get_front(&global_variable.uart_trsm_pkt_buf, &packet)) {
+        UartPacket packet = UART_PKT_NEW();
+        if (!uart_trcv_buf_pop(&global_variable.uart_trsm_pkt_buf, &packet)) {
             vTaskDelay(pdMS_TO_TICKS(10));
             continue;
         }
@@ -45,7 +45,6 @@ static void uart_write_task(void *arg) {
             vTaskDelay(pdMS_TO_TICKS(10));
             continue;
         }
-        uart_trcv_buf_pop_front(&global_variable.uart_trsm_pkt_buf, NULL);
     }
     
     vTaskDelete(NULL);
@@ -59,9 +58,9 @@ static bool uart_read_t(const char* logName, UartPacket *packet) {
     }
     ESP_LOGI(logName, "Read %d bytes: '%s'", len, data);
     ESP_LOG_BUFFER_HEXDUMP(logName, data, len, ESP_LOG_INFO);
-    VecU8 vec_u8 = vec_u8_new();
+    VecU8 vec_u8 = VEC_U8_NEW();
     vec_u8_push(&vec_u8, &data, len);
-    UartPacket new = uart_pkt_new();
+    UartPacket new = UART_PKT_NEW();
     if (uart_pkt_pack(&new, &vec_u8)) {
         ESP_LOGI(logName, "Pack %d bytes", len);
     }
@@ -75,7 +74,7 @@ static void uart_read_task(void *arg) {
     ESP_LOGI(RX_TASK_TAG, "Uart read task start");
 
     while (1) {
-        UartPacket packet = uart_pkt_new();
+        UartPacket packet = UART_PKT_NEW();
         if (!uart_read_t(RX_TASK_TAG, &packet)) {
             continue;
         }

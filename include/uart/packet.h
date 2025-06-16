@@ -3,22 +3,24 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "vec_mod.h"
+#include "vec.h"
 
-#define PACKET_START_CODE  ((uint8_t) '{')
-#define PACKET_END_CODE    ((uint8_t) '}')
+#define PACKET_START_CODE  ((uint8_t) '>')
+#define PACKET_END_CODE    ((uint8_t) '\n')
 
 #define PACKET_MAX_SIZE VECU8_MAX_CAPACITY
 #define PACKET_DATA_MAX_SIZE (VECU8_MAX_CAPACITY - 2)
 
-typedef struct UartPacket UartPacket;
 typedef struct UartPacket {
     uint8_t     start;
-    VecU8       datas;
+    VecU8       vec;
     uint8_t     end;
 } UartPacket;
+#define UART_PKT_NEW() ((UartPacket){ \
+    .start = PACKET_START_CODE, \
+    .end   = PACKET_END_CODE \
+})
 bool uart_pkt_add_data(UartPacket *self, VecU8 *vec_u8);
 bool uart_pkt_get_data(const UartPacket *self, VecU8 *vec_u8);
 bool uart_pkt_pack(UartPacket *self, VecU8 *vec_u8);
 bool uart_pkt_unpack(const UartPacket *self, VecU8 *vec_u8);
-UartPacket uart_pkt_new(void);

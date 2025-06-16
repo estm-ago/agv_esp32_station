@@ -1,4 +1,4 @@
-#include "vec_mod.h"
+#include "vec.h"
 // ----------------------------------------------------------------------------------------------------
 #include <string.h>
 
@@ -188,15 +188,4 @@ bool vec_u8_rm_range(VecU8 *self, uint16_t offset, uint16_t size) {
     memmove(self->data + offset, self->data + (offset + size), self->len - (offset + size));
     self->len -= size;
     return 1;
-}
-
-/**
- * @brief 初始化並回傳新的 VecU8 實例
- *        Initializes and returns a new VecU8 instance
- *
- * @return VecU8 新的 VecU8 結構 (the initialized VecU8 structure)
- */
-VecU8 vec_u8_new(void) {
-    VecU8 vec = {0};
-    return vec;
 }

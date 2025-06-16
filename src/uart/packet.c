@@ -9,13 +9,13 @@
  */
 bool uart_pkt_add_data(UartPacket *self, VecU8 *vec_u8) {
     vec_u8_realign(vec_u8);
-    return vec_u8_push(&self->datas, vec_u8->data, vec_u8->len);
+    return vec_u8_push(&self->vec, vec_u8->data, vec_u8->len);
 }
 
 /**
  * @brief 從 UART 封包中取出資料向量 (Extract payload data from UART packet)
  *
- * 從輸入的 UartPacket 取得其內部儲存的資料向量 (datas)，
+ * 從輸入的 UartPacket 取得其內部儲存的資料向量 (vec)，
  * 並回傳該 VecU8 實例。並不包含起始與結束碼 (start/end codes)。
  *
  * @param self  來源 UART 封包指標 (input UART packet pointer)
@@ -23,7 +23,7 @@ bool uart_pkt_add_data(UartPacket *self, VecU8 *vec_u8) {
  */
 bool uart_pkt_get_data(const UartPacket *self, VecU8 *vec_u8) {
     vec_u8_rm_range(vec_u8, 0, VECU8_MAX_CAPACITY);
-    vec_u8_push(vec_u8, self->datas.data, self->datas.len);
+    vec_u8_push(vec_u8, self->vec.data, self->vec.len);
     return 1;
 }
 
@@ -44,7 +44,7 @@ bool uart_pkt_pack(UartPacket *self, VecU8 *vec_u8) {
     vec_u8_rm_range(vec_u8, 0, 1);
     vec_u8_rm_range(vec_u8, vec_u8->len-1, 1);
     vec_u8_realign(vec_u8);
-    self->datas = *vec_u8;
+    self->vec = *vec_u8;
     return 1;
 }
 
@@ -58,20 +58,7 @@ bool uart_pkt_pack(UartPacket *self, VecU8 *vec_u8) {
 bool uart_pkt_unpack(const UartPacket *self, VecU8 *vec_u8) {
     vec_u8_rm_range(vec_u8, 0, VECU8_MAX_CAPACITY);
     vec_u8_push_byte(vec_u8, self->start);
-    vec_u8_push(vec_u8, self->datas.data, self->datas.len);
+    vec_u8_push(vec_u8, self->vec.data, self->vec.len);
     vec_u8_push_byte(vec_u8, self->end);
     return 1;
-}
-
-/**
- * @brief 生成一個新的 UART 封包，包含起始碼與結束碼
- *        Create a new UART packet including start and end codes
- *
- * @return UartPacket 已封裝的 UART 封包 (packed UART packet)
- */
-UartPacket uart_pkt_new(void) {
-    UartPacket pkt = {0};
-    pkt.start       = PACKET_START_CODE;
-    pkt.end         = PACKET_END_CODE;
-    return pkt;
 }

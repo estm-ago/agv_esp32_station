@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vec_mod.h"
+#include "vec.h"
 
 typedef struct DataStorage {
     VecU8 motor_right_speed[4*100];

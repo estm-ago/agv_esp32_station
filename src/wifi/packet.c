@@ -23,7 +23,7 @@ WifiTrcvBuf wifi_udp_receive_buffer = {0};
 WifiPacket wifi_packet_new(const ip4_addr_t *ip, const VecU8 *vec_u8) {
     WifiPacket packet;
     packet.ip = *ip;
-    packet.data = vec_u8_new();
+    packet.data = VEC_U8_NEW();
     vec_u8_push(&packet.data, vec_u8->data, vec_u8->len);
     return packet;
 }
@@ -37,7 +37,7 @@ WifiPacket wifi_packet_new(const ip4_addr_t *ip, const VecU8 *vec_u8) {
  * @return bool 是否封包成功 (true if pack successful, false otherwise)
  */
 VecU8 wifi_packet_get_data(const WifiPacket *packet) {
-    VecU8 vec_u8 = vec_u8_new();
+    VecU8 vec_u8 = VEC_U8_NEW();
     vec_u8_push(&vec_u8, packet->data.data, packet->data.len);
     return vec_u8;
 }
@@ -62,7 +62,7 @@ void wifi_packet_add_data(WifiPacket *packet, const VecU8 *vec_u8) {
  */
 void wifi_packet_unpack(const WifiPacket *packet, ip4_addr_t *ip, VecU8 *vec_u8) {
     *ip = packet->ip;
-    *vec_u8 = vec_u8_new();
+    *vec_u8 = VEC_U8_NEW();
     vec_u8_push(vec_u8, packet->data.data,packet->data.len);
 }
 

@@ -16,12 +16,6 @@ bool uart_trcv_buf_push(UartTrcvBuf *self, const UartPacket *pkt) {
     return true;
 }
 
-bool uart_trcv_buf_get_front(const UartTrcvBuf *self, UartPacket *pkt) {
-    if (self->len == 0) return 0;
-    *pkt = self->packets[self->head];
-    return 1;
-}
-
 /**
  * @brief 從環形緩衝區彈出一個封包資料
  *        Pop a packet from the ring buffer
@@ -30,7 +24,7 @@ bool uart_trcv_buf_get_front(const UartTrcvBuf *self, UartPacket *pkt) {
  * @param pkt 輸出參數，接收彈出的 UART 封包 (output popped UART packet)
  * @return bool 是否彈出成功 (true if pop successful, false if buffer empty)
  */
-bool uart_trcv_buf_pop_front(UartTrcvBuf *self, UartPacket *pkt) {
+bool uart_trcv_buf_pop(UartTrcvBuf *self, UartPacket *pkt) {
     if (self->len == 0) return 0;
     if (pkt != NULL) *pkt = self->packets[self->head];
     if (--self->len == 0) {

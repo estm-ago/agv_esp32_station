@@ -10,5 +10,4 @@ typedef struct UartTrcvBuf {
     uint8_t     len;
 } UartTrcvBuf;
 bool uart_trcv_buf_push(UartTrcvBuf *self, const UartPacket *pkt);
-bool uart_trcv_buf_get_front(const UartTrcvBuf *self, UartPacket *pkt);
-bool uart_trcv_buf_pop_front(UartTrcvBuf *self, UartPacket *pkt);
+bool uart_trcv_buf_pop(UartTrcvBuf *self, UartPacket *pkt);

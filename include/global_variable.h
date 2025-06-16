@@ -22,5 +22,4 @@ typedef struct GlobalVariable {
      */
     UartTrcvBuf uart_recv_pkt_buf;
 } GlobalVariable;
-
 extern GlobalVariable global_variable;
