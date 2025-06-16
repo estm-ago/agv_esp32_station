@@ -1,3 +1,3 @@
 #include "global_variable.h"
 
-GlobalVariable global_variable = {0};
+GlobalState global_state = {0};

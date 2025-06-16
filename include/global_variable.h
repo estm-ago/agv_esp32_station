@@ -3,7 +3,7 @@
 #include "uart/main.h"
 #include "uart/trcv_buffer.h"
 
-typedef struct GlobalVariable {
+typedef struct GlobalState {
     /**
      * @brief 傳輸/接收操作旗標
      *        Transmit/receive operation flags
@@ -21,5 +21,5 @@ typedef struct GlobalVariable {
      *        Global receive ring buffer
      */
     UartTrcvBuf uart_recv_pkt_buf;
-} GlobalVariable;
-extern GlobalVariable global_variable;
+} GlobalState;
+extern GlobalState global_state;

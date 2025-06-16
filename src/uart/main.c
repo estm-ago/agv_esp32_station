@@ -15,15 +15,16 @@ static const char *TAG = "user_uart_main";
 
 static const int RX_BUF_SIZE = VECU8_MAX_CAPACITY;
 
-#define TXD_PIN (GPIO_NUM_4)
-#define RXD_PIN (GPIO_NUM_5)
+#define STM32_UART UART_NUM_2
+#define STM32_UART_TXD GPIO_NUM_17
+#define STM32_UART_RXD GPIO_NUM_16
 
 #define UART_READ_TIMEOUT_MS 10
 
 static bool uart_write_t(const char* logName, UartPacket *packet) {
     VecU8 vec_u8 = VEC_U8_NEW();
     uart_pkt_unpack(packet, &vec_u8);
-    int len = uart_write_bytes(UART_NUM_1, vec_u8.data, vec_u8.len);
+    int len = uart_write_bytes(STM32_UART, vec_u8.data, vec_u8.len);
     if (len <= 0) {
         return 0;
     }
@@ -37,7 +38,7 @@ static void uart_write_task(void *arg) {
 
     while (1) {
         UartPacket packet = UART_PKT_NEW();
-        if (!uart_trcv_buf_pop(&global_variable.uart_trsm_pkt_buf, &packet)) {
+        if (!uart_trcv_buf_pop(&global_state.uart_trsm_pkt_buf, &packet)) {
             vTaskDelay(pdMS_TO_TICKS(10));
             continue;
         }
@@ -52,7 +53,7 @@ static void uart_write_task(void *arg) {
 
 static bool uart_read_t(const char* logName, UartPacket *packet) {
     uint8_t data[VECU8_MAX_CAPACITY] = {0};
-    int len = uart_read_bytes(UART_NUM_1, data, VECU8_MAX_CAPACITY, pdMS_TO_TICKS(UART_READ_TIMEOUT_MS));
+    int len = uart_read_bytes(STM32_UART, data, VECU8_MAX_CAPACITY, pdMS_TO_TICKS(UART_READ_TIMEOUT_MS));
     if (len <= 0) {
         return 0;
     }
@@ -78,8 +79,8 @@ static void uart_read_task(void *arg) {
         if (!uart_read_t(RX_TASK_TAG, &packet)) {
             continue;
         }
-        uart_trcv_buf_push(&global_variable.uart_recv_pkt_buf, &packet);
-        ESP_LOGI(RX_TASK_TAG, "Buf len: %d", global_variable.uart_recv_pkt_buf.len);
+        uart_trcv_buf_push(&global_state.uart_recv_pkt_buf, &packet);
+        ESP_LOGI(RX_TASK_TAG, "Buf len: %d", global_state.uart_recv_pkt_buf.len);
     }
 
     vTaskDelete(NULL);
@@ -93,7 +94,7 @@ static void uart_tasks_spawn(void) {
 
 void uart_setup(void) {
     ESP_LOGI(TAG, "uart_setup");
-    uart_driver_install(UART_NUM_1, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
+    uart_driver_install(STM32_UART, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
     const uart_config_t uart_config = {
         .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
@@ -102,7 +103,7 @@ void uart_setup(void) {
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
         .source_clk = UART_SCLK_DEFAULT,
     };
-    uart_param_config(UART_NUM_1, &uart_config);
-    uart_set_pin(UART_NUM_1, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    uart_param_config(STM32_UART, &uart_config);
+    uart_set_pin(STM32_UART, STM32_UART_TXD, STM32_UART_RXD, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     uart_tasks_spawn();
 }
