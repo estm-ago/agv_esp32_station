@@ -211,7 +211,7 @@ static void wss_server_send_messages(httpd_handle_t* server) {
     }
 }
 
-void server_main(void) {
+void wifi_https_main(void) {
 
     https_server_start();
 

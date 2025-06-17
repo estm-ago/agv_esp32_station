@@ -1,3 +1,3 @@
 #pragma once
 
-void server_main(void);
+void wifi_https_main(void);
