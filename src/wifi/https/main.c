@@ -12,7 +12,7 @@
 #include "wifi/https/url.h"
 #include "sdkconfig.h"
 
-static const char *TAG = "user_wss_echo_server";
+static const char *TAG = "user_https_server";
 static const size_t max_clients = 4;
 
 static httpd_handle_t https_server = NULL;
@@ -32,20 +32,16 @@ static bool client_not_alive_cb(wss_keep_alive_t alive_handle, int file_descript
 
 /**
  * @brief 發送 WebSocket PING 封包給客戶端
- * @param arg 指向 async_resp_arg 結構，包含 hd 與 fd
+ * @param arg 指向 async_resp_arg 結構，包含 httpd_handle 與 fd
  */
 static void send_ping(void *arg)
 {
-    async_resp_arg *resp_arg = arg;
-    httpd_handle_t hd = resp_arg->httpd_handle;
-    int fd = resp_arg->file_descriptor;
-    httpd_ws_frame_t ws_pkt;
-    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = NULL;
-    ws_pkt.len = 0;
-    ws_pkt.type = HTTPD_WS_TYPE_PING;
-
-    httpd_ws_send_frame_async(hd, fd, &ws_pkt);
+    async_resp_arg* resp_arg = (async_resp_arg*) arg;
+    httpd_ws_frame_t ws_pkt = {
+        .len = 0,
+        .type = HTTPD_WS_TYPE_PING,
+    };
+    httpd_ws_send_frame_async(resp_arg->httpd_handle, resp_arg->file_descriptor, &ws_pkt);
     free(resp_arg);
 }
 
@@ -63,9 +59,7 @@ static bool check_client_alive_cb(wss_keep_alive_t alive_handle, int file_descri
     resp_arg->httpd_handle = wss_keep_alive_get_user_ctx(alive_handle);
     resp_arg->file_descriptor = file_descriptor;
 
-    if (httpd_queue_work(resp_arg->httpd_handle, send_ping, resp_arg) != ESP_OK) {
-        return false;
-    }
+    if (httpd_queue_work(resp_arg->httpd_handle, send_ping, resp_arg) != ESP_OK) return false;
     return true;
 }
 
