@@ -1,3 +1,4 @@
+#include "wifi/https/main.h"
 #include <esp_event.h>
 #include <esp_log.h>
 #include <esp_system.h>
@@ -7,16 +8,9 @@
 #include <esp_eth.h>
 #include <esp_wifi.h>
 #include <lwip/sockets.h>
-#include <esp_https_server.h>
-#include "wifi/https/server.h"
 #include "wifi/https/keep_alive.h"
 #include "wifi/https/url.h"
 #include "sdkconfig.h"
-
-struct async_resp_arg {
-    httpd_handle_t httpd_handle;
-    int file_descriptor;
-};
 
 static const char *TAG = "user_wss_echo_server";
 static const size_t max_clients = 4;
@@ -42,7 +36,7 @@ static bool client_not_alive_cb(wss_keep_alive_t alive_handle, int file_descript
  */
 static void send_ping(void *arg)
 {
-    struct async_resp_arg *resp_arg = arg;
+    async_resp_arg *resp_arg = arg;
     httpd_handle_t hd = resp_arg->httpd_handle;
     int fd = resp_arg->file_descriptor;
     httpd_ws_frame_t ws_pkt;
@@ -64,7 +58,7 @@ static void send_ping(void *arg)
 static bool check_client_alive_cb(wss_keep_alive_t alive_handle, int file_descriptor)
 {
     ESP_LOGD(TAG, "Checking if client (fd=%d) is alive", file_descriptor);
-    struct async_resp_arg *resp_arg = malloc(sizeof(struct async_resp_arg));
+    async_resp_arg *resp_arg = malloc(sizeof(async_resp_arg));
     assert(resp_arg != NULL);
     resp_arg->httpd_handle = wss_keep_alive_get_user_ctx(alive_handle);
     resp_arg->file_descriptor = file_descriptor;
@@ -77,24 +71,24 @@ static bool check_client_alive_cb(wss_keep_alive_t alive_handle, int file_descri
 
 /**
  * @brief 在新連線建立時呼叫，將客戶端加入 keep-alive 名單
- * @param hd HTTPD server handle
+ * @param httpd_handle HTTPD server handle
  * @param sockfd 客戶端 socket 檔案描述符
  * @return esp_err_t, ESP_OK 表示加入成功
  */
-static esp_err_t wss_open_fd(httpd_handle_t hd, int sockfd) {
+static esp_err_t client_connect(httpd_handle_t httpd_handle, int sockfd) {
     ESP_LOGI(TAG, "New client connected %d", sockfd);
-    wss_keep_alive_t h = httpd_get_global_user_ctx(hd);
+    wss_keep_alive_t h = httpd_get_global_user_ctx(httpd_handle);
     return wss_keep_alive_add_client(h, sockfd);
 }
 
 /**
  * @brief 在連線關閉時呼叫，將客戶端從 keep-alive 名單移除，並關閉 socket
- * @param hd HTTPD server handle
+ * @param httpd_handle HTTPD server handle
  * @param sockfd 客戶端 socket 描述符
  */
-static void wss_close_fd(httpd_handle_t hd, int sockfd) {
+static void client_disconnect(httpd_handle_t httpd_handle, int sockfd) {
     ESP_LOGI(TAG, "Client disconnected %d", sockfd);
-    wss_keep_alive_t h = httpd_get_global_user_ctx(hd);
+    wss_keep_alive_t h = httpd_get_global_user_ctx(httpd_handle);
     wss_keep_alive_remove_client(h, sockfd);
     close(sockfd);
 }
@@ -114,14 +108,13 @@ static esp_err_t https_server_start_inner(void)
     wss_keep_alive_t keep_alive = wss_keep_alive_start(&keep_alive_config);
 
     // Start the httpd server
-    https_server = NULL;
     ESP_LOGI(TAG, "Starting server");
 
     httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
     conf.httpd.max_open_sockets = max_clients;
     conf.httpd.global_user_ctx = keep_alive;
-    conf.httpd.open_fn = wss_open_fd;
-    conf.httpd.close_fn = wss_close_fd;
+    conf.httpd.open_fn = client_connect;
+    conf.httpd.close_fn = client_disconnect;
 
     extern const unsigned char servercert_start[] asm("_binary_servercert_pem_start");
     extern const unsigned char servercert_end[]   asm("_binary_servercert_pem_end");
@@ -165,7 +158,7 @@ static esp_err_t https_server_stop_inner(void) {
  * @param event_id 事件 ID
  * @param event_data 事件資料
  */
-static void connect_handler(
+static void wifi_connect_handler(
     void* arg, esp_event_base_t event_base,
     int32_t event_id, void* event_data
 ) {
@@ -183,7 +176,7 @@ static void connect_handler(
  * @param event_id 事件 ID
  * @param event_data 事件資料
  */
-static void disconnect_handler(
+static void wifi_disconnect_handler(
     void* arg, esp_event_base_t event_base,
     int32_t event_id, void* event_data
 ) {
@@ -206,8 +199,8 @@ esp_err_t https_server_start(void)
 {
     esp_err_t result = https_server_start_inner();
     if (result != ESP_OK) return result;
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &https_server));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &https_server));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_connect_handler, &https_server));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &wifi_disconnect_handler, &https_server));
     return ESP_OK;
 }
 
@@ -217,27 +210,27 @@ esp_err_t https_server_start(void)
  */
 esp_err_t https_server_stop(void)
 {
-    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, connect_handler));
-    ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, disconnect_handler));
+    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_connect_handler));
+    ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, wifi_disconnect_handler));
     return https_server_stop_inner();
 }
 
 /**
  * @brief 發送文字訊息 "Hello client" 給指定的 WebSocket 客戶端
- * @param arg 指向 async_resp_arg 結構，包含 hd 與 fd
+ * @param arg 指向 async_resp_arg 結構，包含 httpd_handle 與 fd
  */
 static void send_hello(void *arg) {
     static const char * data = "Hello client";
-    struct async_resp_arg *resp_arg = arg;
-    httpd_handle_t hd = resp_arg->httpd_handle;
-    int fd = resp_arg->file_descriptor;
+    async_resp_arg *resp_arg = arg;
+    httpd_handle_t httpd_handle = resp_arg->httpd_handle;
+    int file_descriptor = resp_arg->file_descriptor;
     httpd_ws_frame_t ws_pkt;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
     ws_pkt.payload = (uint8_t*)data;
     ws_pkt.len = strlen(data);
     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
 
-    httpd_ws_send_frame_async(hd, fd, &ws_pkt);
+    httpd_ws_send_frame_async(httpd_handle, file_descriptor, &ws_pkt);
     free(resp_arg);
 }
 
@@ -263,7 +256,7 @@ static void wss_server_send_messages(httpd_handle_t* server) {
                 int sock = client_fds[i];
                 if (httpd_ws_get_fd_info(*server, sock) == HTTPD_WS_CLIENT_WEBSOCKET) {
                     ESP_LOGI(TAG, "Active client (fd=%d) -> sending async message", sock);
-                    struct async_resp_arg *resp_arg = malloc(sizeof(struct async_resp_arg));
+                    async_resp_arg *resp_arg = malloc(sizeof(async_resp_arg));
                     assert(resp_arg != NULL);
                     resp_arg->httpd_handle = *server;
                     resp_arg->file_descriptor = sock;
@@ -282,8 +275,6 @@ static void wss_server_send_messages(httpd_handle_t* server) {
 }
 
 void wifi_https_main(void) {
-
     https_server_start();
-
     wss_server_send_messages(&https_server);
 }
