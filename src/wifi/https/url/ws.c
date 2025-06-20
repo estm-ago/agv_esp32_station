@@ -46,19 +46,25 @@ static esp_err_t ws_handler(httpd_req_t *req) {
                 httpd_req_to_sockfd(req));
     // If it was a TEXT message, just echo it back
     } else if (ws_pkt.type == HTTPD_WS_TYPE_TEXT || ws_pkt.type == HTTPD_WS_TYPE_PING || ws_pkt.type == HTTPD_WS_TYPE_CLOSE) {
-        if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
-            ESP_LOGI(TAG, "Received packet with message: %s", ws_pkt.payload);
-        } else if (ws_pkt.type == HTTPD_WS_TYPE_PING) {
+        if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
+        {
+            if (ws_pkt.payload != NULL) ESP_LOGI(TAG, "Received packet with message: %s", ws_pkt.payload);
+        }
+        else if (ws_pkt.type == HTTPD_WS_TYPE_PING)
+        {
             // Response PONG packet to peer
             ESP_LOGI(TAG, "Got a WS PING frame, Replying PONG");
             ws_pkt.type = HTTPD_WS_TYPE_PONG;
-        } else if (ws_pkt.type == HTTPD_WS_TYPE_CLOSE) {
+        }
+        else if (ws_pkt.type == HTTPD_WS_TYPE_CLOSE)
+        {
             // Response CLOSE packet with no payload to peer
             ws_pkt.len = 0;
             ws_pkt.payload = NULL;
         }
         ret = httpd_ws_send_frame(req, &ws_pkt);
-        if (ret != ESP_OK) {
+        if (ret != ESP_OK)
+        {
             ESP_LOGE(TAG, "httpd_ws_send_frame failed with %d", ret);
         }
         ESP_LOGI(TAG, "ws_handler: httpd_handle_t=%p, sockfd=%d, client_info:%d", req->handle,

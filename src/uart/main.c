@@ -39,7 +39,7 @@ uint16_t u16_test = 1;
 static FnState uart_tr_pkt_proc(void)
 {
     f32_test++;
-    VecU8 vec_u8 = VEC_U8_NEW();
+    Vec_U8 vec_u8 = VEC_U8_NEW();
     FNS_ERROR_CHECK(vec_u8_push_byte(&vec_u8, CMD_CODE_DATA_TRRE));
     FNS_ERROR_CHECK(vec_u8_push(&vec_u8, CMD_RIGHT_SPEED_STORE, sizeof(CMD_RIGHT_SPEED_STORE)));
     // FNS_ERROR_CHECK(vec_u8_push_f32(&vec_u8, motor_right.speed_present));
@@ -57,7 +57,7 @@ static FnState uart_tr_pkt_proc(void)
  * @param vec_u8 指向去除命令碼後的資料向量 (input vector without command code)
  * @return void
  */
-static FnState uart_re_pkt_proc_data_store(VecU8 *vec_u8)
+static FnState uart_re_pkt_proc_data_store(Vec_U8 *vec_u8)
 {
     bool data_proc_flag = true;
     while (data_proc_flag)
@@ -111,7 +111,7 @@ static FnState uart_re_pkt_proc()
     {
         UartPacket packet = UART_PKT_NEW();
         FNS_ERROR_CHECK(uart_trcv_buf_pop(&uart_rv_pkt_buf, &packet));
-        VecU8 vec_u8 = VEC_U8_NEW();
+        Vec_U8 vec_u8 = VEC_U8_NEW();
         FNS_ERROR_CHECK(uart_pkt_get_data(&packet, &vec_u8));
         uint8_t code = vec_u8.data[vec_u8.head];
         FNS_ERROR_CHECK(vec_u8_rm_range(&vec_u8, 0, 1));
@@ -129,17 +129,17 @@ static FnState uart_re_pkt_proc()
 
 static FnState uart_write_t(const char* logName, UartPacket *packet)
 {
-    VecU8 vec_u8 = VEC_U8_NEW();
+    Vec_U8 vec_u8 = VEC_U8_NEW();
     uart_pkt_unpack(packet, &vec_u8);
     int len = uart_write_bytes(STM32_UART, vec_u8.data, vec_u8.len);
-    if (len <= 0) return FNS_ERROR;
+    if (len <= 0) return FNS_FAIL;
     ESP_LOGI(logName, "Wrote %d bytes", len);
     return FNS_OK;
 }
 
 static FnState uart_read_t(const char* logName, UartPacket *packet)
 {
-    VecU8 vec_u8 = VEC_U8_NEW();
+    Vec_U8 vec_u8 = VEC_U8_NEW();
     vec_u8.len = uart_read_bytes(STM32_UART, vec_u8.data, VECU8_MAX_CAPACITY, pdMS_TO_TICKS(UART_READ_TIMEOUT_MS));
     if (vec_u8.len <= 0) return 0;
     ESP_LOGI(logName, "Read %d bytes >>>", vec_u8.len);

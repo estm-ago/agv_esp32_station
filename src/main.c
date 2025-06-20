@@ -32,7 +32,8 @@ void app_main(void) {
     
     uart_start();
     wifi_connect_sta();
-    wifi_https_main();
+    // wifi_https_main();
+    https_server_start();
 
     while (1) {
         // ESP_LOGI(TAG, "Running main loop...");

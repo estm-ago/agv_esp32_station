@@ -120,8 +120,8 @@ static esp_err_t https_server_start_inner(void)
     conf.prvtkey_pem = prvtkey_pem_start;
     conf.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
 
-    esp_err_t ret = httpd_ssl_start(&https_server, &conf);
-    if (ESP_OK != ret) {
+    if (httpd_ssl_start(&https_server, &conf) != ESP_OK)
+    {
         ESP_LOGI(TAG, "Error starting server!");
         return ESP_FAIL;
     }
@@ -141,7 +141,7 @@ static esp_err_t https_server_start_inner(void)
 static esp_err_t https_server_stop_inner(void) {
     if (https_server == NULL) return ESP_ERR_INVALID_STATE;
     wss_keep_alive_stop(httpd_get_global_user_ctx(https_server));
-    // Stop the httpd server
+
     return httpd_ssl_stop(https_server);
 }
 

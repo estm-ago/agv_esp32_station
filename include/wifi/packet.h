@@ -6,12 +6,12 @@
 
 typedef struct {
     ip4_addr_t ip;
-    VecU8 data;
+    Vec_U8 data;
 } WifiPacket;
-WifiPacket wifi_packet_new(const ip4_addr_t *ip, const VecU8 *vec_u8);
-VecU8 wifi_packet_get_data(const WifiPacket *packet);
-void wifi_packet_add_data(WifiPacket *packet, const VecU8 *vec_u8);
-void wifi_packet_unpack(const WifiPacket *packet, ip4_addr_t *ip, VecU8 *vec_u8);
+WifiPacket wifi_packet_new(const ip4_addr_t *ip, const Vec_U8 *vec_u8);
+Vec_U8 wifi_packet_get_data(const WifiPacket *packet);
+void wifi_packet_add_data(WifiPacket *packet, const Vec_U8 *vec_u8);
+void wifi_packet_unpack(const WifiPacket *packet, ip4_addr_t *ip, Vec_U8 *vec_u8);
 
 #define WIFI_TRCV_BUF_CAP 5
 
