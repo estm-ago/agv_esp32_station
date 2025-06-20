@@ -2,7 +2,8 @@
 
 #include <stdbool.h>
 
-typedef struct TransceiveFlags {
+typedef struct TransceiveFlags
+{
     bool uart_transmit;
     bool uart_tr_pkt_proc;
     bool uart_re_pkt_proc;

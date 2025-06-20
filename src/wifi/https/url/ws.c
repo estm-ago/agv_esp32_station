@@ -44,7 +44,6 @@ static esp_err_t ws_handler(httpd_req_t *req) {
         free(buf);
         return wss_keep_alive_client_is_active(httpd_get_global_user_ctx(req->handle),
                 httpd_req_to_sockfd(req));
-
     // If it was a TEXT message, just echo it back
     } else if (ws_pkt.type == HTTPD_WS_TYPE_TEXT || ws_pkt.type == HTTPD_WS_TYPE_PING || ws_pkt.type == HTTPD_WS_TYPE_CLOSE) {
         if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
