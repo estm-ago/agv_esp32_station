@@ -10,3 +10,5 @@ typedef struct async_resp_arg {
 
 esp_err_t https_server_start(void);
 esp_err_t https_server_stop(void);
+
+FnState https_server_setup(void);

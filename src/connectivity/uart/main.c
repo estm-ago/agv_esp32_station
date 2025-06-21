@@ -1,5 +1,4 @@
 #include "connectivity/uart/main.h"
-#include "prioritites_sequ.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_system.h>
@@ -50,7 +49,7 @@ static FnState uart_read_t(const char* logName)
 }
 
 static void uart_recv_task(void *arg) {
-    static const char *TASK_TAG = "user_uart_RX";
+    static const char *TASK_TAG = "user_uart_RECV";
     esp_log_level_set(TASK_TAG, ESP_LOG_INFO);
     ESP_LOGI(TASK_TAG, "Uart RX task start");
     for(;;)
@@ -144,11 +143,13 @@ static FnState uart_re_pkt_proc_data_store(VecByte *vec_u8)
  * @param count 單次最大處理封包數量 (input maximum number of packets to process per time)
  * @return void
  */
-static FnState uart_re_pkt_proc(void)
+static FnState uart_re_pkt_proc(size_t count)
 {
     VecByte vec_u8;
     FNS_ERROR_CHECK(vec_byte_new(&vec_u8, UART_VEC_MAX));
-    if (connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_u8) == FNS_OK) {
+    for (size_t i = 0; i < count; i++)
+    {
+        FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_u8), vec_byte_free(&vec_u8));
         uint8_t code = vec_u8.data[vec_u8.head];
         vec_rm_range(&vec_u8, 0, 1);
         switch (code)
@@ -168,17 +169,17 @@ static void uart_data_task(void *arg)
 {
     static const char *TASK_TAG = "user_uart_DATA";
     esp_log_level_set(TASK_TAG, ESP_LOG_INFO);
-    uint8_t tick = 0;
+    size_t tick = 0;
     for(;;)
     {
         uart_write_t(TASK_TAG);
-        uart_re_pkt_proc();
-        if (tick % 20 == 0)
+        uart_re_pkt_proc(5);
+        if (tick % 500 == 0)
         {
             uart_tr_pkt_proc();
             tick = 0;
         }
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(10));
         tick++;
     }
 }
@@ -203,5 +204,5 @@ void uart_setup(void) {
     FNS_ERROR_CHECK_VOID(connect_trcv_buf_setup(&uart_rv_pkt_buf, UART_TRCV_BUF_CAP, UART_VEC_MAX));
 
     xTaskCreate(uart_recv_task, "uart_recv_task", 1024, NULL, UART_READ_TASK_PRIO_SEQU, NULL);
-    xTaskCreate(uart_data_task, "uart_data_task", 2048, NULL, UART_WRITE_TASK_PRIO_SEQU, NULL);
+    xTaskCreate(uart_data_task, "uart_data_task", 2048, NULL, UART_DATA_TASK_PRIO_SEQU, NULL);
 }

@@ -20,13 +20,6 @@ static httpd_handle_t https_server = NULL;
 WSByteTrcvBuf https_tr_pkt_buf;
 WSByteTrcvBuf https_rv_pkt_buf;
 
-FnState https_ws_setup(void)
-{
-    FNS_ERROR_CHECK(https_trcv_buf_setup(&https_tr_pkt_buf, 10, WIFI_HTTPS_WS_VEC_MAX));
-    FNS_ERROR_CHECK(https_trcv_buf_setup(&https_rv_pkt_buf, 10, WIFI_HTTPS_WS_VEC_MAX));
-    return FNS_OK;
-}
-
 /**
  * @brief 當客戶端不存活時的回呼，關閉相應連線
  * @param alive_handle keep-alive 引擎 handle
@@ -118,6 +111,7 @@ static esp_err_t https_server_start_inner(void)
     ESP_LOGI(TAG, "Starting server");
 
     httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
+    conf.httpd.task_priority = HTTPS_TASK_PRIO_SEQU;
     conf.httpd.max_open_sockets = max_clients;
     conf.httpd.global_user_ctx = keep_alive;
     conf.httpd.open_fn = client_connect;
@@ -277,8 +271,29 @@ static void wss_server_send_messages(httpd_handle_t* server) {
 }
 */
 
-void wifi_https_main(void) {
-    https_ws_setup();
+static void https_data_task(void *arg)
+{
+    static const char *TASK_TAG = "user_https_DATA";
+    esp_log_level_set(TASK_TAG, ESP_LOG_INFO);
+    size_t tick = 0;
+    for(;;)
+    {
+        if (tick % 20 == 0)
+        {
+            tick = 0;
+        }
+        vTaskDelay(pdMS_TO_TICKS(50));
+        tick++;
+    }
+}
+
+FnState https_server_setup(void) {
+    FNS_ERROR_CHECK(https_trcv_buf_setup(&https_tr_pkt_buf, WIFI_HTTPS_TRCV_BUF_CAP, WIFI_HTTPS_WS_TR_VEC_MAX));
+    FNS_ERROR_CHECK(https_trcv_buf_setup(&https_rv_pkt_buf, WIFI_HTTPS_TRCV_BUF_CAP, WIFI_HTTPS_WS_RV_VEC_MAX));
+
     https_server_start();
+
+    xTaskCreate(https_data_task, "https_data_task", 1024, NULL, HTTPS_DATA_TASK_PRIO_SEQU, NULL);
     // wss_server_send_messages(&https_server);
+    return FNS_OK;
 }

@@ -3,6 +3,7 @@
 
 FnState connect_trcv_buf_setup(ByteTrcvBuf* self, size_t buf_size, size_t data_size)
 {
+    if (buf_size > TRCV_BUF_MAX_CAPACITY) return FNS_FAIL;
     self->head = 0;
     self->len = 0;
     self->cap = buf_size;

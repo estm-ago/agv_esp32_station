@@ -46,28 +46,6 @@ static void wifi_event_handler(
     }
 }
 
-void wifi_init_sta(void) {
-    ESP_LOGI(TAG, "wifi_init_sta");
-
-    wifi_event_group = xEventGroupCreate();
-    // Create default Wi-Fi station
-    esp_netif_t* sta_netif = esp_netif_create_default_wifi_sta();
-    ESP_ERROR_CHECK(esp_netif_dhcpc_stop(sta_netif));
-    esp_netif_ip_info_t ip_info;
-    inet_pton(AF_INET, WIFI_DHCP, &ip_info.ip);
-    inet_pton(AF_INET, "255.255.255.0", &ip_info.netmask);
-    inet_pton(AF_INET, "192.168.0.1", &ip_info.gw);
-    ESP_ERROR_CHECK(esp_netif_set_ip_info(sta_netif, &ip_info));
-
-    // Initialize Wi-Fi driver
-    wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
-    
-    // Register Wi-Fi and IP event handlers
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, NULL));
-}
-
 void wifi_connect_sta(void) {
     ESP_LOGI(TAG, "wifi_connect_sta");
 
@@ -101,4 +79,28 @@ void wifi_connect_sta(void) {
     else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(TAG, "Connect FAILED  >> WIFI_SSID: %s / WIFI_PSWD: %s", WIFI_SSID, WIFI_PSWD);
     }
+}
+
+void wifi_setup_sta(void) {
+    ESP_LOGI(TAG, "wifi_setup_sta");
+
+    wifi_event_group = xEventGroupCreate();
+    // Create default Wi-Fi station
+    esp_netif_t* sta_netif = esp_netif_create_default_wifi_sta();
+    ESP_ERROR_CHECK(esp_netif_dhcpc_stop(sta_netif));
+    esp_netif_ip_info_t ip_info;
+    inet_pton(AF_INET, WIFI_DHCP, &ip_info.ip);
+    inet_pton(AF_INET, "255.255.255.0", &ip_info.netmask);
+    inet_pton(AF_INET, "192.168.0.1", &ip_info.gw);
+    ESP_ERROR_CHECK(esp_netif_set_ip_info(sta_netif, &ip_info));
+
+    // Initialize Wi-Fi driver
+    wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
+    
+    // Register Wi-Fi and IP event handlers
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, NULL));
+
+    wifi_connect_sta();
 }
