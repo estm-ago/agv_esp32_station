@@ -39,13 +39,16 @@ static esp_err_t ws_handler(httpd_req_t *req) {
         }
     }
     // If it was a PONG, update the keep-alive
-    if (ws_pkt.type == HTTPD_WS_TYPE_PONG) {
+    if (ws_pkt.type == HTTPD_WS_TYPE_PONG)
+    {
         ESP_LOGD(TAG, "Received PONG message");
         free(buf);
         return wss_keep_alive_client_is_active(httpd_get_global_user_ctx(req->handle),
                 httpd_req_to_sockfd(req));
     // If it was a TEXT message, just echo it back
-    } else if (ws_pkt.type == HTTPD_WS_TYPE_TEXT || ws_pkt.type == HTTPD_WS_TYPE_PING || ws_pkt.type == HTTPD_WS_TYPE_CLOSE) {
+    }
+    else if (ws_pkt.type == HTTPD_WS_TYPE_TEXT || ws_pkt.type == HTTPD_WS_TYPE_PING || ws_pkt.type == HTTPD_WS_TYPE_CLOSE)
+    {
         if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
         {
             if (ws_pkt.payload != NULL) ESP_LOGI(TAG, "Received packet with message: %s", ws_pkt.payload);
