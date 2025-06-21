@@ -1,11 +1,15 @@
 #include "connectivity/wifi/https/url.h"
 #include <string.h>
 #include <esp_log.h>
+#include "config.h"
+#include "fn_state.h"
+#include "connectivity/trcv_buffer.h"
 #include "connectivity/wifi/https/keep_alive.h"
 
 static const char *TAG = "user_https_ws";
 
-static esp_err_t ws_handler(httpd_req_t *req) {
+static esp_err_t ws_handler(httpd_req_t *req)
+{
     if (req->method == HTTP_GET) {
         ESP_LOGI(TAG, "Handshake done, the new connection was opened");
         return ESP_OK;
@@ -43,12 +47,14 @@ static esp_err_t ws_handler(httpd_req_t *req) {
     {
         ESP_LOGD(TAG, "Received PONG message");
         free(buf);
-        return wss_keep_alive_client_is_active(httpd_get_global_user_ctx(req->handle),
-                httpd_req_to_sockfd(req));
+        return wss_keep_alive_client_is_active(httpd_get_global_user_ctx(req->handle), httpd_req_to_sockfd(req));
     // If it was a TEXT message, just echo it back
     }
-    else if (ws_pkt.type == HTTPD_WS_TYPE_TEXT || ws_pkt.type == HTTPD_WS_TYPE_PING || ws_pkt.type == HTTPD_WS_TYPE_CLOSE)
-    {
+    else if (
+           ws_pkt.type == HTTPD_WS_TYPE_TEXT
+        || ws_pkt.type == HTTPD_WS_TYPE_PING
+        || ws_pkt.type == HTTPD_WS_TYPE_CLOSE
+    ) {
         if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
         {
             if (ws_pkt.payload != NULL) ESP_LOGI(TAG, "Received packet with message: %s", ws_pkt.payload);

@@ -9,6 +9,7 @@
 
 #define VECU8_MAX_CAPACITY 256
 
+#define WIFI_HTTPS_WS_VEC_MAX 256
 #define UART_VEC_MAX 128
 #define UART_TRCV_BUF_CAP 10
 #define UART_START_CODE  ((uint8_t) '>')
