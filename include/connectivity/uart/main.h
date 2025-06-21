@@ -12,4 +12,3 @@ typedef struct TransceiveFlags
 } TransceiveFlags;
 
 void uart_setup(void);
-void uart_start(void);

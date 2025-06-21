@@ -7,7 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include "wifi/https/keep_alive.h"
+#include "connectivity/wifi/https/keep_alive.h"
 #include <esp_log.h>
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>

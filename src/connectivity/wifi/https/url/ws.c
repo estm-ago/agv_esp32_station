@@ -1,7 +1,7 @@
-#include "wifi/https/url.h"
+#include "connectivity/wifi/https/url.h"
 #include <string.h>
 #include <esp_log.h>
-#include "wifi/https/keep_alive.h"
+#include "connectivity/wifi/https/keep_alive.h"
 
 static const char *TAG = "user_https_ws";
 

@@ -1,23 +1,21 @@
 #include <esp_system.h>
 #include <esp_log.h>
-#include <esp_event.h>
 #include <nvs_flash.h>
+#include <esp_event.h>
+#include <esp_netif.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 // #include <freertos/event_groups.h>
 // #include "esp_mac.h"
 // #include <esp_wifi.h>
 // #include "esp_http_server.h"
-// #include <esp_netif.h>
 // #include "lwip/err.h"
 // #include "lwip/sys.h"
 // #include <lwip/sockets.h>
 // #include "lwip/netdb.h"
-#include "wifi/main.h"
-#include "wifi/tcp_transceive.h"
-#include "wifi/https/main.h"
-#include "uart/main.h"
-#include "uart/packet.h"
+#include "connectivity/wifi/main.h"
+#include "connectivity/wifi/https/main.h"
+#include "connectivity/uart/main.h"
 
 static const char *TAG = "user_main";
 
@@ -30,7 +28,6 @@ void app_main(void) {
     uart_setup();
     wifi_init_sta();
     
-    uart_start();
     wifi_connect_sta();
     // wifi_https_main();
     https_server_start();

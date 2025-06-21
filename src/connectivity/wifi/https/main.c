@@ -1,4 +1,4 @@
-#include "wifi/https/main.h"
+#include "connectivity/wifi/https/main.h"
 #include <esp_event.h>
 #include <esp_log.h>
 #include <esp_system.h>
@@ -8,8 +8,8 @@
 #include <esp_eth.h>
 #include <esp_wifi.h>
 #include <lwip/sockets.h>
-#include "wifi/https/keep_alive.h"
-#include "wifi/https/url.h"
+#include "connectivity/wifi/https/keep_alive.h"
+#include "connectivity/wifi/https/url.h"
 #include "sdkconfig.h"
 
 static const char *TAG = "user_https_server";

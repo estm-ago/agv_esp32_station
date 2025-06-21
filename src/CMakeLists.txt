@@ -13,6 +13,6 @@ idf_component_register(
         esp_timer
         esp_eth
     EMBED_TXTFILES 
-        "wifi/https/certs/servercert.pem"
-        "wifi/https/certs/prvtkey.pem"
+        "connectivity/wifi/https/certs/servercert.pem"
+        "connectivity/wifi/https/certs/prvtkey.pem"
 )
