@@ -1,39 +1,32 @@
-/**
- * ! Generate by code, do not edit !
- */
 #pragma once
 
 #include <stdint.h>
 
-#define CMD_CODE_DATA_TRRE 0x10
-#define CMD_CODE_VECH_CONTROL 0x20
-#define CMD_CODE_LOOP_STOP 0x00
-#define CMD_CODE_ONLY_ONCE 0x01
-#define CMD_CODE_LOOP_START 0x02
-#define CMD_CODE_MOTOR_LEFT 0x00
-#define CMD_CODE_MOTOR_RIGHT 0x01
-#define CMD_CODE_SPEED 0x00
-#define CMD_CODE_ADC 0x05
+#define CMD_BX_EMPTY        (uint8_t)0x00
 
-#define CMD_LEFT_SPEED_STORE ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_SPEED})
-#define CMD_LEFT_SPEED_STOP ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_SPEED, CMD_CODE_LOOP_STOP})
-#define CMD_LEFT_SPEED_ONCE ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_SPEED, CMD_CODE_ONLY_ONCE})
-#define CMD_LEFT_SPEED_START ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_SPEED, CMD_CODE_LOOP_START})
-#define CMD_LEFT_ADC_STORE ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_ADC})
-#define CMD_LEFT_ADC_STOP ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_ADC, CMD_CODE_LOOP_STOP})
-#define CMD_LEFT_ADC_ONCE ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_ADC, CMD_CODE_ONLY_ONCE})
-#define CMD_LEFT_ADC_START ((uint8_t[]){CMD_CODE_MOTOR_LEFT, CMD_CODE_ADC, CMD_CODE_LOOP_START})
-#define CMD_RIGHT_SPEED_STORE ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_SPEED})
-#define CMD_RIGHT_SPEED_STOP ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_SPEED, CMD_CODE_LOOP_STOP})
-#define CMD_RIGHT_SPEED_ONCE ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_SPEED, CMD_CODE_ONLY_ONCE})
-#define CMD_RIGHT_SPEED_START ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_SPEED, CMD_CODE_LOOP_START})
-#define CMD_RIGHT_ADC_STORE ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_ADC})
-#define CMD_RIGHT_ADC_STOP ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_ADC, CMD_CODE_LOOP_STOP})
-#define CMD_RIGHT_ADC_ONCE ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_ADC, CMD_CODE_ONLY_ONCE})
-#define CMD_RIGHT_ADC_START ((uint8_t[]){CMD_CODE_MOTOR_RIGHT, CMD_CODE_ADC, CMD_CODE_LOOP_START})
-#define CMD_MOVE_STOP ((uint8_t[]){CMD_CODE_VECH_CONTROL, 0x00})
-#define CMD_MOVE_FORWARD ((uint8_t[]){CMD_CODE_VECH_CONTROL, 0x01})
-#define CMD_MOVE_BACKWARD ((uint8_t[]){CMD_CODE_VECH_CONTROL, 0x02})
-#define CMD_MOVE_LEFT ((uint8_t[]){CMD_CODE_VECH_CONTROL, 0x03})
-#define CMD_MOVE_RIGHT ((uint8_t[]){CMD_CODE_VECH_CONTROL, 0x04})
+//--------------------------------------------------
+#define CMD_B0_DATA         (uint8_t)0x00
+#define CMD_B0_DATA_STOP    (uint8_t)0x01
+#define CMD_B0_DATA_START   (uint8_t)0x02
 
+#define CMD_B1_LEFT_SPEED   (uint8_t)0x10
+#define CMD_B1_RIGHT_SPEED  (uint8_t)0x11
+#define CMD_B1_LEFT_DUTY    (uint8_t)0x20
+#define CMD_B1_RIGHT_DUTY   (uint8_t)0x21
+
+#define CMD_B2_TOTAL        (uint8_t)0x00
+#define CMD_B3_NUMBER       (uint8_t)0x00
+
+//--------------------------------------------------
+#define CMD_B0_VECH_CONTROL (uint8_t)0x10
+
+#define CMD_B1_LEFT_STOP    (uint8_t)0x00
+#define CMD_B1_LEFT_SPIN    (uint8_t)0x01
+#define CMD_B1_RIGHT_STOP   (uint8_t)0x10
+#define CMD_B1_RIGHT_SPIN   (uint8_t)0x11
+#define CMD_B1_VEHICLE_STOP (uint8_t)0x80
+#define CMD_B1_VEHICLE_MOVE (uint8_t)0x81
+
+#define CMD_B2_VALUE        (uint8_t)0x00
+
+#define CMD_B3_NONE         CMD_BX_EMPTY
