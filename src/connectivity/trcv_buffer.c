@@ -16,11 +16,12 @@ FnState connect_trcv_buf_setup(ByteTrcvBuf* self, size_t buf_size, size_t data_s
     return FNS_OK;
 }
 
-FnState connect_trcv_buf_push(ByteTrcvBuf* self, const VecByte* vec_u8)
+FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_u8)
 {
     if (self->len >= self->cap) return FNS_BUF_OVERFLOW;
     size_t tail = (self->head + self->len) % self->cap;
     vec_rm_all(&self->vecs[tail]);
+    FNS_ERROR_CHECK(vec_byte_realign(vec_u8));
     FNS_ERROR_CHECK(vec_byte_push(&self->vecs[tail], vec_u8->data, vec_u8->len));
     self->len++;
     return FNS_OK;
