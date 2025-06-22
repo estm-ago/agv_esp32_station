@@ -70,11 +70,11 @@ static FnState uart_write_t(const char* logName)
 
 static FnState uart_tr_pkt_proc(void)
 {
-    VecByte vec_u8;
-    FNS_ERROR_CHECK(vec_byte_new(&vec_u8, UART_VEC_MAX));
-    FNS_ERROR_CHECK_CLEAN(vec_byte_push_byte(&vec_u8, CMD_B0_DATA_START), vec_byte_free(&vec_u8));
-    FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_u8), vec_byte_free(&vec_u8));
-    vec_byte_free(&vec_u8);
+    VecByte vec_byte;
+    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_MAX));
+    FNS_ERROR_CHECK_CLEAN(vec_byte_push_byte(&vec_byte, CMD_B0_DATA_START), vec_byte_free(&vec_byte));
+    FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
+    vec_byte_free(&vec_byte);
     return FNS_OK;
 }
 
@@ -87,13 +87,13 @@ static FnState uart_tr_pkt_proc(void)
  */
 static FnState uart_re_pkt_proc(size_t count)
 {
-    VecByte vec_u8;
-    FNS_ERROR_CHECK(vec_byte_new(&vec_u8, UART_VEC_MAX));
+    VecByte vec_byte;
+    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_MAX));
     for (size_t i = 0; i < count; i++)
     {
-        FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_u8), vec_byte_free(&vec_u8));
-        uint8_t code = vec_u8.data[vec_u8.head];
-        vec_rm_range(&vec_u8, 0, 1);
+        FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
+        uint8_t code = vec_byte.data[vec_byte.head];
+        vec_rm_range(&vec_byte, 0, 1);
         switch (code)
         {
             case CMD_B0_DATA:
@@ -102,7 +102,7 @@ static FnState uart_re_pkt_proc(size_t count)
                 break;
         }
     }
-    vec_byte_free(&vec_u8);
+    vec_byte_free(&vec_byte);
     return FNS_OK;
 }
 
