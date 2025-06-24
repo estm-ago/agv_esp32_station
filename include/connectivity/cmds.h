@@ -6,13 +6,13 @@
 
 //--------------------------------------------------
 #define CMD_B0_DATA         (uint8_t)0x00   // 回傳資料
-#define CMD_B0_DATA_STOP    (uint8_t)0x01   // 資料收集開始
-#define CMD_B0_DATA_START   (uint8_t)0x02   // 資料收集停止
+#define CMD_B0_DATA_STOP    (uint8_t)0x01   // 資料收集停止(can)
+#define CMD_B0_DATA_START   (uint8_t)0x02   // 資料收集開始(can)
 
-#define CMD_B1_LEFT_SPEED   (uint8_t)0x10   // 左馬達速度
-#define CMD_B1_RIGHT_SPEED  (uint8_t)0x11   // 右馬達速度
-#define CMD_B1_LEFT_DUTY    (uint8_t)0x20   // 左馬達功率
-#define CMD_B1_RIGHT_DUTY   (uint8_t)0x21   // 右馬達功率
+#define CMD_B1_LEFT_SPEED   (uint8_t)0x10   // 左馬達速度f32
+#define CMD_B1_RIGHT_SPEED  (uint8_t)0x11   // 右馬達速度f32
+#define CMD_B1_LEFT_DUTY    (uint8_t)0x20   // 左馬達功率u8
+#define CMD_B1_RIGHT_DUTY   (uint8_t)0x21   // 右馬達功率u8
 
 #define CMD_B2_TOTAL        (uint8_t)0x00   // 資料包總計(can)
 #define CMD_B3_NUMBER       (uint8_t)0x00   // 資料包編號(can)
@@ -30,4 +30,4 @@
 #define CMD_B2_FOWARD       (uint8_t)0x00   // 前進/正轉
 #define CMD_B2_BACKWARD     (uint8_t)0x00   // 後退/反轉
 
-#define CMD_B2_VALUE        CMD_BX_EMPTY    // 速度
+#define CMD_B3_VALUE        CMD_BX_EMPTY    // 速度0-100
