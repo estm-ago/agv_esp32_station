@@ -51,7 +51,7 @@ static void uart_recv_task(void *arg) {
     ESP_LOGI(TASK_TAG, "Uart RX task start");
     for(;;)
     {
-        if (uart_read_t(TASK_TAG) != FNS_BUF_EMPTY) continue;
+        // if (uart_read_t(TASK_TAG) != FNS_BUF_EMPTY) continue;
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

@@ -28,6 +28,8 @@
 #define CMD_B1_RIGHT_SPIN   (uint8_t)0x43   // 右馬達旋轉
 
 #define CMD_B2_FOWARD       (uint8_t)0x00   // 前進/正轉
-#define CMD_B2_BACKWARD     (uint8_t)0x00   // 後退/反轉
+#define CMD_B2_BACKWARD     (uint8_t)0x01   // 後退/反轉
+#define CMD_B2_LEFT         (uint8_t)0x02   // 左轉
+#define CMD_B2_RIGHT        (uint8_t)0x03   // 右轉
 
 #define CMD_B3_VALUE        CMD_BX_EMPTY    // 速度0-100

@@ -40,7 +40,7 @@ static esp_err_t ws_handler(httpd_req_t *req)
         }
     }
 
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
+    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT || ws_pkt.type == HTTPD_WS_TYPE_BINARY)
     {
         buf[ws_pkt.len] = '\0';
         if (ws_pkt.payload != NULL) ESP_LOGI(TAG, "Received message: %s", ws_pkt.payload);
@@ -48,12 +48,15 @@ static esp_err_t ws_handler(httpd_req_t *req)
         vec_byte_new(&vec_byte, ws_pkt.len);
         if (vec_byte_push(&vec_byte, ws_pkt.payload, ws_pkt.len) == FNS_OK)
         {
+            ESP_LOG_BUFFER_HEXDUMP(TAG, vec_byte.data, vec_byte.len, ESP_LOG_INFO);
             https_trcv_buf_push(&https_rv_pkt_buf, &vec_byte, httpd_req_to_sockfd(req));
             ESP_LOGI(TAG, "Buf count: %d", https_rv_pkt_buf.trcv_buf.len);
+            buf[0] = 0x01;
+            ws_pkt.len = 1;
+            ret = httpd_ws_send_frame(req, &ws_pkt);
+            if (req == ESP_OK) ESP_LOGI(TAG, "Back succeed");
         }
         vec_byte_free(&vec_byte);
-        
-        esp_err_t ret = httpd_ws_send_frame(req, &ws_pkt);
         free(buf);
         return ret;
         // free(buf);
