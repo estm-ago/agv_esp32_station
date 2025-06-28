@@ -1,16 +1,14 @@
 /*
-#include "main/fn_state.h"
+#include "fn_state.h"
 */
 #pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
-
-#define error_timeout_time_limit 30 * 1000
+#include "config.h"
 
 typedef int FnState;
 extern FnState last_error;
-
 #define FNS_INVALID         -1
 #define FNS_OK              0
 #define FNS_FAIL            1
@@ -21,17 +19,17 @@ extern FnState last_error;
 #define FNS_NOT_MOVE        6
 #define FNS_ERR_OOM         7
 
-#define FNS_ERROR_CHECK(expr)   \
-    do {                        \
-        FnState _err = (expr);  \
-        if (_err != FNS_OK)     \
-        {                       \
-            last_error = _err;  \
-            return _err;        \
-        }                       \
+#define ERROR_CHECK_FNS_RETURN(expr)    \
+    do {                                \
+        FnState _err = (expr);          \
+        if (_err != FNS_OK)             \
+        {                               \
+            last_error = _err;          \
+            return _err;                \
+        }                               \
     } while (0)
 
-#define FNS_ERROR_CHECK_VOID(expr)  \
+#define ERROR_CHECK_FNS_VOID(expr)  \
     do {                            \
         FnState _err = (expr);      \
         if (_err != FNS_OK)         \
@@ -41,28 +39,25 @@ extern FnState last_error;
         }                           \
     } while (0)
 
-#define FNS_ERROR_CHECK_CLEAN(fncall, cleanup)  \
+#define ERROR_CHECK_FNS_CLEAN(expr, cleanup)    \
     do {                                        \
-        FnState _err = (fncall);               \
-        if (_err != FNS_OK)                    \
+        FnState _err = (expr);                  \
+        if (_err != FNS_OK)                     \
         {                                       \
             cleanup;                            \
             last_error = _err;                  \
-            return _err;                       \
+            return _err;                        \
         }                                       \
     } while (0)
 
-typedef struct FnState_h
-{
-    FnState vehicle_test_no_load_speed;
-    FnState vehicle_over_hall_fall_back;
-    FnState vehicle_rotate_in_place_hall;
-    FnState vehicle_search_magnetic_path;
-    FnState vehicle2_ensure_motor_stop;
-    FnState vehicle2_renew_vehicle_rotation_status;
-    FnState rotate_in_place__map_data_current_count;
-    FnState breakdown_all_hall_lost__path_not_found;
-} FnState_h;
-extern FnState_h error_state;
+#define ERROR_CHECK_FNS_HANDLE(expr)            \
+    do {                                        \
+        FnState _err = (expr);                  \
+        if (_err != FNS_OK)                     \
+        {                                       \
+            ESP_LOGE(TAG, "An Error Occoured"); \
+            Error_Handler();                    \
+        }                                       \
+    } while (0)
 
-bool timeout_error(uint32_t error_start, FnState *error_parameter);
+void Error_Handler(void);

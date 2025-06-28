@@ -34,7 +34,7 @@ static FnState uart_read_t(const char* logName)
         (uart_rv_buf.data[0] == UART_START_CODE)
         && (uart_rv_buf.data[uart_rv_buf.len-1] == UART_END_CODE)
     ) {
-        FNS_ERROR_CHECK(connect_trcv_buf_push(&uart_rv_pkt_buf, &uart_rv_buf));
+        ERROR_CHECK_FNS_RETURN(connect_trcv_buf_push(&uart_rv_pkt_buf, &uart_rv_buf));
         return FNS_OK;
     }
     else
@@ -58,9 +58,9 @@ static FnState uart_write_t(const char* logName)
 {
     if (uart_enable != true) return FNS_INVALID;
     vec_rm_all(&uart_tr_buf);
-    FNS_ERROR_CHECK(vec_byte_push_byte(&uart_tr_buf, UART_START_CODE));
-    FNS_ERROR_CHECK(connect_trcv_buf_pop(&uart_tr_pkt_buf, &uart_tr_buf));
-    FNS_ERROR_CHECK(vec_byte_push_byte(&uart_tr_buf, UART_END_CODE));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&uart_tr_buf, UART_START_CODE));
+    ERROR_CHECK_FNS_RETURN(connect_trcv_buf_pop(&uart_tr_pkt_buf, &uart_tr_buf));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&uart_tr_buf, UART_END_CODE));
     int len = uart_write_bytes(STM32_UART, uart_tr_buf.data, uart_tr_buf.len);
     if (len <= 0) return FNS_FAIL;
     ESP_LOGI(logName, "Wrote %d bytes", len);
@@ -70,9 +70,9 @@ static FnState uart_write_t(const char* logName)
 static FnState uart_tr_pkt_proc(void)
 {
     VecByte vec_byte;
-    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
-    FNS_ERROR_CHECK_CLEAN(vec_byte_push_byte(&vec_byte, CMD_B0_DATA_START), vec_byte_free(&vec_byte));
-    FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
+    ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
+    ERROR_CHECK_FNS_CLEAN(vec_byte_push_byte(&vec_byte, CMD_B0_DATA_START), vec_byte_free(&vec_byte));
+    ERROR_CHECK_FNS_CLEAN(connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
     vec_byte_free(&vec_byte);
     return FNS_OK;
 }
@@ -87,10 +87,10 @@ static FnState uart_tr_pkt_proc(void)
 static FnState uart_re_pkt_proc(size_t count)
 {
     VecByte vec_byte;
-    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
+    ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
     for (size_t i = 0; i < count; i++)
     {
-        FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
+        ERROR_CHECK_FNS_CLEAN(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
         uint8_t code = vec_byte.data[vec_byte.head];
         vec_rm_range(&vec_byte, 0, 1);
         switch (code)

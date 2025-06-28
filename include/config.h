@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <esp_log.h>
 #include <esp_event.h>
@@ -45,3 +46,14 @@
 
 
 // ! SYSTEM config END ------------------------------
+
+typedef int8_t FncState;
+#define FNC_CANCEL  -1
+#define FNC_DISABLE 0
+#define FNC_ENABLE  1
+
+// #define ENABLE_CON_PKT_TEST
+// #define DISABLE_FDCAN
+#define DISABLE_UART
+// #define DISABLE_UART_TRSM
+// #define DISABLE_UART_RECV

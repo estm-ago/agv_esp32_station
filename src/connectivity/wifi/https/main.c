@@ -9,6 +9,7 @@
 #include <esp_wifi.h>
 #include <lwip/sockets.h>
 #include "sdkconfig.h"
+#include "fn_state.h"
 #include "connectivity/wifi/https/keep_alive.h"
 #include "connectivity/wifi/https/url.h"
 
@@ -288,8 +289,8 @@ static void https_data_task(void *arg)
 }
 
 FnState https_server_setup(void) {
-    FNS_ERROR_CHECK(https_trcv_buf_setup(&https_tr_pkt_buf, WIFI_HTTPS_TRCV_BUF_CAP, WIFI_HTTPS_WS_TR_VEC_MAX));
-    FNS_ERROR_CHECK(https_trcv_buf_setup(&https_rv_pkt_buf, WIFI_HTTPS_TRCV_BUF_CAP, WIFI_HTTPS_WS_RV_VEC_MAX));
+    ERROR_CHECK_FNS_RETURN(https_trcv_buf_setup(&https_tr_pkt_buf, WIFI_HTTPS_TRCV_BUF_CAP, WIFI_HTTPS_WS_TR_VEC_MAX));
+    ERROR_CHECK_FNS_RETURN(https_trcv_buf_setup(&https_rv_pkt_buf, WIFI_HTTPS_TRCV_BUF_CAP, WIFI_HTTPS_WS_RV_VEC_MAX));
 
     https_server_start();
 

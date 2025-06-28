@@ -11,7 +11,7 @@ FnState connect_trcv_buf_setup(ByteTrcvBuf* self, size_t buf_size, size_t data_s
     if (self->vecs == NULL) return FNS_ERR_OOM;
     for (size_t i = 0; i < buf_size; i++)
     {
-        FNS_ERROR_CHECK(vec_byte_new(&self->vecs[i], data_size));
+        ERROR_CHECK_FNS_RETURN(vec_byte_new(&self->vecs[i], data_size));
     }
     return FNS_OK;
 }
@@ -21,8 +21,8 @@ FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte)
     if (self->len >= self->cap) return FNS_BUF_OVERFLOW;
     size_t tail = (self->head + self->len) % self->cap;
     vec_rm_all(&self->vecs[tail]);
-    FNS_ERROR_CHECK(vec_byte_realign(vec_byte));
-    FNS_ERROR_CHECK(vec_byte_push(&self->vecs[tail], vec_byte->data, vec_byte->len));
+    ERROR_CHECK_FNS_RETURN(vec_byte_realign(vec_byte));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push(&self->vecs[tail], vec_byte->data, vec_byte->len));
     self->len++;
     return FNS_OK;
 }
@@ -30,7 +30,7 @@ FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte)
 FnState connect_trcv_buf_pop(ByteTrcvBuf* self, VecByte* vec_byte)
 {
     if (self->len == 0) return FNS_BUF_EMPTY;
-    FNS_ERROR_CHECK(vec_byte_push(vec_byte, self->vecs[self->head].data, self->vecs[self->head].len));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push(vec_byte, self->vecs[self->head].data, self->vecs[self->head].len));
     if (--self->len == 0)
     {
         self->head = 0;
