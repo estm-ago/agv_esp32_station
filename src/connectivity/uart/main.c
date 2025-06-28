@@ -3,8 +3,8 @@
 #include <freertos/task.h>
 #include <esp_system.h>
 #include <esp_log.h>
-#include "driver/uart.h"
 #include "string.h"
+#include "driver/uart.h"
 #include "driver/gpio.h"
 #include "global_variable.h"
 #include "config.h"
@@ -13,9 +13,7 @@
 
 static const char *TAG = "user_uart_main";
 
-#define STM32_UART UART_NUM_2
-#define STM32_UART_TXD GPIO_NUM_17
-#define STM32_UART_RXD GPIO_NUM_16
+bool uart_enable = false;
 
 static VecByte uart_tr_buf;
 static VecByte uart_rv_buf;
@@ -45,19 +43,20 @@ static FnState uart_read_t(const char* logName)
     }
 }
 
-static void uart_recv_task(void *arg) {
+static UNUSED_FNC void uart_recv_task(void *arg) {
     static const char *TASK_TAG = "user_uart_RECV";
     esp_log_level_set(TASK_TAG, ESP_LOG_INFO);
     ESP_LOGI(TASK_TAG, "Uart RX task start");
     for(;;)
     {
-        // if (uart_read_t(TASK_TAG) != FNS_BUF_EMPTY) continue;
+        if (uart_read_t(TASK_TAG) != FNS_BUF_EMPTY) continue;
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 static FnState uart_write_t(const char* logName)
 {
+    if (uart_enable != true) return FNS_INVALID;
     vec_rm_all(&uart_tr_buf);
     FNS_ERROR_CHECK(vec_byte_push_byte(&uart_tr_buf, UART_START_CODE));
     FNS_ERROR_CHECK(connect_trcv_buf_pop(&uart_tr_pkt_buf, &uart_tr_buf));
@@ -71,7 +70,7 @@ static FnState uart_write_t(const char* logName)
 static FnState uart_tr_pkt_proc(void)
 {
     VecByte vec_byte;
-    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_MAX));
+    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
     FNS_ERROR_CHECK_CLEAN(vec_byte_push_byte(&vec_byte, CMD_B0_DATA_START), vec_byte_free(&vec_byte));
     FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
     vec_byte_free(&vec_byte);
@@ -88,7 +87,7 @@ static FnState uart_tr_pkt_proc(void)
 static FnState uart_re_pkt_proc(size_t count)
 {
     VecByte vec_byte;
-    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_MAX));
+    FNS_ERROR_CHECK(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
     for (size_t i = 0; i < count; i++)
     {
         FNS_ERROR_CHECK_CLEAN(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
@@ -106,7 +105,7 @@ static FnState uart_re_pkt_proc(size_t count)
     return FNS_OK;
 }
 
-static void uart_data_task(void *arg)
+static UNUSED_FNC void uart_data_task(void *arg)
 {
     static const char *TASK_TAG = "user_uart_DATA";
     esp_log_level_set(TASK_TAG, ESP_LOG_INFO);
@@ -115,7 +114,9 @@ static void uart_data_task(void *arg)
     size_t tick = 0;
     for(;;)
     {
+#ifndef DISABLE_UART_TRSM
         uart_write_t(TASK_TAG);
+#endif
         uart_re_pkt_proc(5);
         if (tick % 500 == 0)
         {
@@ -126,9 +127,11 @@ static void uart_data_task(void *arg)
     }
 }
 
-void uart_setup(void) {
+void uart_setup(void)
+{
+#ifndef DISABLE_UART
     ESP_LOGI(TAG, "uart_setup");
-    uart_driver_install(STM32_UART, UART_VEC_MAX + 2, 0, 0, NULL, 0);
+    uart_driver_install(STM32_UART, UART_VEC_BYTE_CAP + 2, 0, 0, NULL, 0);
     const uart_config_t uart_config = {
         .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
@@ -140,11 +143,13 @@ void uart_setup(void) {
     uart_param_config(STM32_UART, &uart_config);
     // Tx:GPIO17 Rx:GPIO16
     uart_set_pin(STM32_UART, STM32_UART_TXD, STM32_UART_RXD, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    FNS_ERROR_CHECK_VOID(vec_byte_new(&uart_tr_buf, UART_VEC_MAX + 2));
-    FNS_ERROR_CHECK_VOID(vec_byte_new(&uart_rv_buf, UART_VEC_MAX + 2));
-    FNS_ERROR_CHECK_VOID(connect_trcv_buf_setup(&uart_tr_pkt_buf, UART_TRCV_BUF_CAP, UART_VEC_MAX));
-    FNS_ERROR_CHECK_VOID(connect_trcv_buf_setup(&uart_rv_pkt_buf, UART_TRCV_BUF_CAP, UART_VEC_MAX));
+    FNS_ERROR_CHECK_VOID(vec_byte_new(&uart_tr_buf, UART_VEC_BYTE_CAP + 2));
+    FNS_ERROR_CHECK_VOID(vec_byte_new(&uart_rv_buf, UART_VEC_BYTE_CAP + 2));
+    FNS_ERROR_CHECK_VOID(connect_trcv_buf_setup(&uart_tr_pkt_buf, UART_TRCV_BUF_CAP, UART_VEC_BYTE_CAP));
+    FNS_ERROR_CHECK_VOID(connect_trcv_buf_setup(&uart_rv_pkt_buf, UART_TRCV_BUF_CAP, UART_VEC_BYTE_CAP));
 
     xTaskCreate(uart_recv_task, "uart_recv_task", 1024, NULL, UART_READ_TASK_PRIO_SEQU, NULL);
     xTaskCreate(uart_data_task, "uart_data_task", 2048, NULL, UART_DATA_TASK_PRIO_SEQU, NULL);
+    uart_enable = true;
+#endif
 }

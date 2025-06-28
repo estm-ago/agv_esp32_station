@@ -34,7 +34,7 @@ FnState vec_rm_range(VecByte *self, size_t offset, size_t size)
 
 FnState vec_byte_new(VecByte *self, size_t cap)
 {
-    if (cap == 0 || cap > VECU8_MAX_CAPACITY) return FNS_FAIL;
+    if (cap == 0 || cap > VEC_BYTE_MAX_CAP) return FNS_FAIL;
     self->data = malloc(cap * sizeof(*self->data));
     if (!self->data) return FNS_ERR_OOM;
     self->cap = cap;

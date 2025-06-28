@@ -13,9 +13,11 @@
 // #include "lwip/sys.h"
 // #include <lwip/sockets.h>
 // #include "lwip/netdb.h"
+#include "config.h"
+#include "connectivity/uart/main.h"
+#include "connectivity/fdcan/main.h"
 #include "connectivity/wifi/main.h"
 #include "connectivity/wifi/https/main.h"
-#include "connectivity/uart/main.h"
 
 static const char *TAG = "user_main";
 
@@ -24,8 +26,9 @@ void app_main(void) {
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(esp_netif_init());
-    
+
     uart_setup();
+    fdcan_setup();
 
     wifi_setup_sta();
     // wifi_https_main();
