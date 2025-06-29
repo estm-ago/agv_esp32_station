@@ -99,7 +99,7 @@ const httpd_uri_t ws = {
         .handle_ws_control_frames = true
 };
 
-static FnState pkt_transmit(void)
+static UNUSED_FNC FnState pkt_transmit(void)
 {
     vec_rm_all(&https_trsm_buf);
     int sockfd;
@@ -191,18 +191,18 @@ static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
 static UNUSED_FNC FnState recv_pkt_proc(size_t count)
 {
     VecByte vec_byte;
+    int sockfd;
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, HTTPS_RECV_VEC_MAX));
     for (size_t i = 0; i < count; i++)
     {
-        int sockfd;
-        ERROR_CHECK_FNS_CLEAN(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_byte, &sockfd), vec_byte_free(&vec_byte));
+        ERROR_CHECK_FNS_BREAK(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_byte, &sockfd));
         recv_pkt_proc0(&vec_byte, sockfd);
     }
     vec_byte_free(&vec_byte);
     return FNS_OK;
 }
 
-static void https_data_task(void *arg)
+static UNUSED_FNC void https_data_task(void *arg)
 {
     static const char *TASK_TAG = "user_https_DATA";
     esp_log_level_set(TASK_TAG, ESP_LOG_INFO);
@@ -221,59 +221,6 @@ static void https_data_task(void *arg)
     }
 }
 
-/*
-static void send_hello(void *arg) {
-    static const char * data = "Hello client";
-    async_resp_arg *resp_arg = arg;
-    httpd_handle_t httpd_handle = resp_arg->httpd_handle;
-    int sockfd = resp_arg->sockfd;
-    httpd_ws_frame_t ws_pkt;
-    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = (uint8_t*)data;
-    ws_pkt.len = strlen(data);
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-
-    httpd_ws_send_frame_async(httpd_handle, sockfd, &ws_pkt);
-    free(resp_arg);
-}
-
-static void wss_server_send_messages(httpd_handle_t* server) {
-    ESP_LOGI(TAG, "wss_server_send_messages");
-    bool send_messages = true;
-
-    // Send async message to all connected clients that use websocket protocol every 10 seconds
-    while (send_messages) {
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-
-        if (!*server) { // httpd might not have been created by now
-            continue;
-        }
-        size_t clients = max_clients;
-        int    client_fds[max_clients];
-        if (httpd_get_client_list(*server, &clients, client_fds) == ESP_OK) {
-            for (size_t i=0; i < clients; ++i) {
-                int sock = client_fds[i];
-                if (httpd_ws_get_fd_info(*server, sock) == HTTPD_WS_CLIENT_WEBSOCKET) {
-                    ESP_LOGI(TAG, "Active client (fd=%d) -> sending async message", sock);
-                    async_resp_arg *resp_arg = malloc(sizeof(async_resp_arg));
-                    assert(resp_arg != NULL);
-                    resp_arg->httpd_handle = *server;
-                    resp_arg->sockfd = sock;
-                    if (httpd_queue_work(resp_arg->httpd_handle, send_hello, resp_arg) != ESP_OK) {
-                        ESP_LOGE(TAG, "httpd_queue_work failed!");
-                        send_messages = false;
-                        break;
-                    }
-                }
-            }
-        } else {
-            ESP_LOGE(TAG, "httpd_get_client_list failed!");
-            return;
-        }
-    }
-}
-*/
-
 FnState https_server_setup(void) {
     https_init();
     https_server_start();
@@ -282,4 +229,3 @@ FnState https_server_setup(void) {
     // wss_server_send_messages(&https_server);
     return FNS_OK;
 }
-
