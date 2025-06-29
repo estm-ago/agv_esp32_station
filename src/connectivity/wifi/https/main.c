@@ -107,7 +107,7 @@ static FnState pkt_transmit(void)
     int sockfd;
     ERROR_CHECK_FNS_RETURN(https_trcv_buf_pop(&https_trsm_pkt_buf, &https_trsm_buf, &sockfd));
     trsm_pkt.len = https_trsm_buf.len;
-    ESP_LOGI(TAG, "Msg trsm FD: %d  LEN: %02X >>>", sockfd, trsm_pkt.len);
+    ESP_LOGI(TAG, "Msg trsm FD: %d LEN: %02X >>>", sockfd, trsm_pkt.len);
     ESP_LOG_BUFFER_HEXDUMP(TAG, trsm_pkt.payload, trsm_pkt.len, ESP_LOG_INFO);
     esp_err_t err = httpd_ws_send_frame_async(https_server, sockfd, &trsm_pkt);
     if (err != ESP_OK) {

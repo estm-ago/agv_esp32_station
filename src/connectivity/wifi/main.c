@@ -24,7 +24,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
     ESP_LOGI(TAG, "wifi_event_handler");
 
     // On disconnection, retry or signal failure
-    if (event_base == WIFI_EVENT   && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
         if (wifi_connect_retry_count < CONNECT_MAXIMUM_RETRY)
         {
@@ -39,7 +39,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         }
     }
     // Obtained IP, reset retry count and set success bit
-    else if (event_base == IP_EVENT     && event_id == IP_EVENT_STA_GOT_IP)
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip: " IPSTR, IP2STR(&event->ip_info.ip));
