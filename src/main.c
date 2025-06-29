@@ -30,9 +30,8 @@ void app_main(void) {
     // uart_setup();
     fdcan_setup();
 
-    // wifi_setup_sta();
-    // wifi_https_main();
-    // https_server_setup();
+    wifi_setup_sta();
+    https_server_setup();
 
     while (1) {
         // ESP_LOGI(TAG, "Running main loop...");

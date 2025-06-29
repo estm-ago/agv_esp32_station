@@ -2,5 +2,9 @@
 
 #include "config.h"
 #include "fn_state.h"
+#include "connectivity/fdcan/trcv_buffer.h"
+
+extern FdcanByteTrcvBuf fdcan_trsm_pkt_buf;
+extern FdcanByteTrcvBuf fdcan_recv_pkt_buf;
 
 void fdcan_setup(void);

@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <esp_log.h>
+#include <esp_system.h>
 #include <esp_event.h>
 #include <freertos/FreeRTOSConfig.h>
 #include <freertos/FreeRTOS.h>
@@ -20,9 +21,10 @@
 #define VEC_BYTE_MAX_CAP 4096
 #define TRCV_BUF_MAX_CAP 10
 
-#define WIFI_HTTPS_WS_TR_VEC_MAX 4096
-#define WIFI_HTTPS_WS_RV_VEC_MAX 128
-#define WIFI_HTTPS_TRCV_BUF_CAP 10
+#define HTTPS_TRSM_VEC_MAX 4096
+#define HTTPS_RECV_VEC_MAX 128 // Min 128
+#define HTTPS_TRCV_BUF_MAX 5
+#define HTTPS_RECV_BUF_MAX 10
 
 // #define DISABLE_FDCAN
 #define FDCAN_VEC_BYTE_CAP  8
@@ -52,7 +54,7 @@ typedef int8_t FncState;
 #define FNC_DISABLE 0
 #define FNC_ENABLE  1
 
-// #define ENABLE_CON_PKT_TEST
+#define ENABLE_CON_PKT_TEST
 // #define DISABLE_FDCAN
 #define DISABLE_UART
 // #define DISABLE_UART_TRSM

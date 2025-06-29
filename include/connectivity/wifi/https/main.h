@@ -1,14 +1,13 @@
 #pragma once
 
-#include <esp_https_server.h>
 #include "fn_state.h"
+#include "connectivity/wifi/https/trcv_buffer.h"
 
-typedef struct async_resp_arg {
-    httpd_handle_t httpd_handle;
-    int sockfd;
-} async_resp_arg;
+extern httpd_handle_t https_server;
 
-esp_err_t https_server_start(void);
-esp_err_t https_server_stop(void);
+extern const httpd_uri_t ws;
+
+extern WSByteTrcvBuf https_trsm_pkt_buf;
+extern WSByteTrcvBuf https_recv_pkt_buf;
 
 FnState https_server_setup(void);
