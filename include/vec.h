@@ -113,6 +113,8 @@ FnState vec_byte_push_byte(VecByte *self, uint8_t value);
  * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push_u16(VecByte *self, uint16_t value);
+
+FnState vec_byte_push_u32(VecByte *self, uint32_t value);
 /**
  * @brief 將原始值轉換為 IEEE-754 大端序並推入 VecByte
  * 

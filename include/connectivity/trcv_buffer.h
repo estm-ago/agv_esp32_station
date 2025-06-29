@@ -2,7 +2,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "fn_state.h"
 #include "config.h"
 #include "vec.h"
 
@@ -35,3 +34,17 @@ FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte);
  * @return FNS_BUF_EMPTY 彈出失敗（緩衝區為空）
  */
 FnState connect_trcv_buf_pop(ByteTrcvBuf* self, VecByte* vec_byte);
+
+#define ERROR_CHECK_FNS_WRI_PUSH(expr1, expr2, cleanup) \
+    do {                                                \
+        FnState _err = (expr1);                         \
+        if (_err == FNS_OK)                             \
+        {                                               \
+            _err = (expr2);                             \
+            if (_err != FNS_OK)                         \
+            {                                           \
+                cleanup;                                \
+                return _err;                            \
+            }                                           \
+        }                                               \
+    } while (0)

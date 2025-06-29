@@ -27,12 +27,12 @@ void app_main(void) {
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(esp_netif_init());
 
-    uart_setup();
+    // uart_setup();
     fdcan_setup();
 
-    wifi_setup_sta();
+    // wifi_setup_sta();
     // wifi_https_main();
-    https_server_setup();
+    // https_server_setup();
 
     while (1) {
         // ESP_LOGI(TAG, "Running main loop...");

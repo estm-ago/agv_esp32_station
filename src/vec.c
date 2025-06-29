@@ -134,8 +134,8 @@ static inline uint16_t swap16(const uint16_t value)
 
 FnState vec_byte_push_u16(VecByte *self, uint16_t value)
 {
-    uint16_t u16 = swap16(value);
-    return vec_byte_push(self, &u16, sizeof(u16));
+    uint16_t val = swap16(value);
+    return vec_byte_push(self, &val, sizeof(uint16_t));
 }
 
 /**
@@ -151,6 +151,12 @@ static inline uint32_t swap32(uint32_t value)
             ((value & 0x0000FF00U) <<  8) | 
             ((value & 0x00FF0000U) >>  8) | 
             ((value & 0xFF000000U) >> 24);
+}
+
+FnState vec_byte_push_u32(VecByte *self, uint32_t value)
+{
+    uint32_t val = swap32(value);
+    return vec_byte_push(self, &val, sizeof(uint32_t));
 }
 
 FnState vec_byte_push_f32(VecByte *self, float value)
