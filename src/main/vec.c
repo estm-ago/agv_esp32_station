@@ -1,7 +1,7 @@
-#include "vec.h"
+#include "main/vec.h"
 #include <stdlib.h>
 #include <string.h>
-#include "config.h"
+#include "main/config.h"
 
 inline FnState vec_rm_all(VecByte *self)
 {

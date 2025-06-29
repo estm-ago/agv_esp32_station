@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRC_SRCS "vec.c" "config.c" "fn_state.c" "global_variable.c" "main.c" "${CMAKE_CURRENT_LIST_DIR}/*.c")
+file(GLOB_RECURSE SRC_SRCS "${CMAKE_CURRENT_LIST_DIR}/*.c")
 
 idf_component_register(
     SRCS ${SRC_SRCS}

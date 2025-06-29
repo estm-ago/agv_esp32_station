@@ -1,8 +1,8 @@
 #pragma once
 
 #include <esp_https_server.h>
-#include "config.h"
-#include "fn_state.h"
+#include "main/config.h"
+#include "main/fn_state.h"
 
 typedef struct async_resp_arg {
     httpd_handle_t httpd_handle;

@@ -2,8 +2,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "config.h"
-#include "vec.h"
+#include "main/config.h"
+#include "main/vec.h"
 
 typedef struct ByteTrcvBuf
 {

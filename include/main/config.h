@@ -18,6 +18,8 @@
 
 // ! SYSTEM config, Change CAREFULLY --------------------
 
+#define AGV_ESP32_DEVICE
+
 #define VEC_BYTE_MAX_CAP 4096
 #define TRCV_BUF_MAX_CAP 10
 

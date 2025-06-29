@@ -80,9 +80,7 @@ static esp_err_t ws_handler(httpd_req_t *req)
             ESP_LOG_BUFFER_HEXDUMP(TAG, https_recv_buf.data, https_recv_buf.len, ESP_LOG_INFO);
             https_trcv_buf_push(&https_recv_pkt_buf, &https_recv_buf, sockfd);
             ESP_LOGI(TAG, "Buf count: %d", https_recv_pkt_buf.trcv_buf.len);
-            recv_pkt.payload[0] = 0x31;
-            recv_pkt.len = 1;
-            return httpd_ws_send_frame(req, &recv_pkt);
+            break;
         }
         default:
         {
@@ -134,29 +132,59 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
     return FNS_OK;
 }
 
-static FnState recv_pkt_proc0(VecByte* vec_byte)
+static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
 {
-    uint8_t code = vec_byte->data[vec_byte->head];
+    uint8_t code;
+    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, &code, 0));
     switch (code)
     {
+        case CMD_B0_DATA:
+        {
+
+        }
         case CMD_B0_VECH_CONTROL:
         {
             if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
-            fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22);
+            ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22));
+            ERROR_CHECK_FNS_RETURN(vec_rm_all(vec_byte));
+            ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, 0x31));
+            ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
             break;
         }
         case CMD_B0_ARM_CONTROL:
         {
             if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
-            fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32);
+            ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32));
+            ERROR_CHECK_FNS_RETURN(vec_rm_all(vec_byte));
+            ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, 0x31));
+            ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
             break;
         }
+        // case 0x74:
+        // {
+        //     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, &code, 1));
+        //     ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
+        //     switch (code)
+        //     {
+        //         case 0x73:
+        //             https_data_trsm_ready = FNC_ENABLE;
+        //             break;
+        //         case 0x65:
+        //             https_data_trsm_ready = FNC_DISABLE;
+        //             break;
+        //         default:
+        //             break;
+        //     }
+        //     break;
+        // }
         default:
         {
+            // if (vec_byte->len > 8) vec_byte->len = 8;
+            // ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x0F));
             last_error = FNS_NO_MATCH;
             return FNS_NO_MATCH;
         }
-    }
+    };
     return FNS_OK;
 }
 
@@ -168,17 +196,7 @@ static UNUSED_FNC FnState recv_pkt_proc(size_t count)
     {
         int sockfd;
         ERROR_CHECK_FNS_CLEAN(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_byte, &sockfd), vec_byte_free(&vec_byte));
-        // recv_pkt_proc0(&vec_byte);
-
-        if (vec_byte.data[0] == 0x74)
-        {
-            if (vec_byte.data[1] == 0x73) https_data_trsm_ready = FNC_ENABLE;
-            else if (vec_byte.data[1] == 0x65) https_data_trsm_ready = FNC_DISABLE;
-        }
-        https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, sockfd);
-        // Todo
-        vec_byte.len = 8;
-        fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x0F);
+        recv_pkt_proc0(&vec_byte, sockfd);
     }
     vec_byte_free(&vec_byte);
     return FNS_OK;

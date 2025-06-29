@@ -13,7 +13,7 @@
 // #include "lwip/sys.h"
 // #include <lwip/sockets.h>
 // #include "lwip/netdb.h"
-#include "config.h"
+#include "main/config.h"
 #include "connectivity/uart/main.h"
 #include "connectivity/fdcan/main.h"
 #include "connectivity/wifi/main.h"

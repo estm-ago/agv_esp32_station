@@ -8,7 +8,7 @@
 #include <nvs_flash.h>
 #include <esp_netif.h>
 #include <lwip/sockets.h>
-#include "config.h"
+#include "main/config.h"
 #include "connectivity/wifi/main.h"
 
 #define WIFI_CONNECTED_BIT      BIT0

@@ -6,8 +6,8 @@
 #include "string.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
-#include "global_variable.h"
-#include "config.h"
+#include "main/global_variable.h"
+#include "main/config.h"
 #include "connectivity/trcv_buffer.h"
 #include "connectivity/cmds.h"
 
