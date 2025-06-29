@@ -8,6 +8,7 @@
 #include <nvs_flash.h>
 #include <esp_netif.h>
 #include <lwip/sockets.h>
+#include "config.h"
 #include "connectivity/wifi/main.h"
 
 #define WIFI_CONNECTED_BIT      BIT0
@@ -18,27 +19,28 @@ static const char *TAG = "user_wifi_main";
 static EventGroupHandle_t wifi_event_group;
 static int wifi_connect_retry_count = 0;
 
-static void wifi_event_handler(
-    void* arg,
-    esp_event_base_t event_base,
-    int32_t event_id,
-    void* event_data
-) {
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id,void* event_data)
+{
     ESP_LOGI(TAG, "wifi_event_handler");
 
     // On disconnection, retry or signal failure
-    if (event_base == WIFI_EVENT   && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (wifi_connect_retry_count < CONNECT_MAXIMUM_RETRY) {
+    if (event_base == WIFI_EVENT   && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        if (wifi_connect_retry_count < CONNECT_MAXIMUM_RETRY)
+        {
             esp_wifi_connect();
             wifi_connect_retry_count++;
             ESP_LOGI(TAG, "retry to connect to the AP");
-        } else {
+        }
+        else
+        {
             // Exceeded max retries, set failure bit
             xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
         }
     }
     // Obtained IP, reset retry count and set success bit
-    else if (event_base == IP_EVENT     && event_id == IP_EVENT_STA_GOT_IP) {
+    else if (event_base == IP_EVENT     && event_id == IP_EVENT_STA_GOT_IP)
+    {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip: " IPSTR, IP2STR(&event->ip_info.ip));
         wifi_connect_retry_count = 0;
@@ -46,7 +48,8 @@ static void wifi_event_handler(
     }
 }
 
-void wifi_connect_sta(void) {
+void wifi_connect_sta(void)
+{
     ESP_LOGI(TAG, "wifi_connect_sta");
 
     xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
@@ -72,16 +75,19 @@ void wifi_connect_sta(void) {
         pdFALSE, pdFALSE, portMAX_DELAY);
     
     // Connected successfully
-    if (bits & WIFI_CONNECTED_BIT) {
+    if (bits & WIFI_CONNECTED_BIT)
+    {
         ESP_LOGI(TAG, "Connect SUCCESS >> WIFI_SSID: %s / WIFI_PSWD: %s", WIFI_SSID, WIFI_PSWD);
     }
     // Failed to connect
-    else if (bits & WIFI_FAIL_BIT) {
+    else if (bits & WIFI_FAIL_BIT)
+    {
         ESP_LOGI(TAG, "Connect FAILED  >> WIFI_SSID: %s / WIFI_PSWD: %s", WIFI_SSID, WIFI_PSWD);
     }
 }
 
-void wifi_setup_sta(void) {
+void wifi_setup_sta(void)
+{
     ESP_LOGI(TAG, "wifi_setup_sta");
 
     wifi_event_group = xEventGroupCreate();
