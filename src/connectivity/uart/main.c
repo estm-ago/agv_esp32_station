@@ -66,8 +66,8 @@ static FnState uart_tr_pkt_proc(void)
 {
     VecByte vec_byte;
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
-    ERROR_CHECK_FNS_CLEAN(vec_byte_push_byte(&vec_byte, CMD_B0_DATA_START), vec_byte_free(&vec_byte));
-    ERROR_CHECK_FNS_CLEAN(connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
+    ERROR_CHECK_FNS_WRI_PUSH(vec_byte_push_byte(&vec_byte, CMD_B0_DATA_START),
+        connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
     vec_byte_free(&vec_byte);
     return FNS_OK;
 }
@@ -85,7 +85,7 @@ static FnState uart_re_pkt_proc(size_t count)
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
     for (size_t i = 0; i < count; i++)
     {
-        ERROR_CHECK_FNS_CLEAN(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
+        if (ERROR_CHECK_FNS_RAW(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte))) break;
         uint8_t code = vec_byte.data[vec_byte.head];
         vec_rm_range(&vec_byte, 0, 1);
         switch (code)

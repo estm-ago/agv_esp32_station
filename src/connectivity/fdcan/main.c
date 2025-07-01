@@ -107,7 +107,7 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
         // ERROR_CHECK_FNS_CLEAN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x24), vec_byte_free(&vec_byte));
         #endif
     }
-    ERROR_CHECK_FNS_RETURN(vec_byte_free(&vec_byte));
+    vec_byte_free(&vec_byte);
     return FNS_OK;
 }
 
@@ -118,7 +118,7 @@ static UNUSED_FNC FnState recv_pkt_proc(size_t count)
     for (size_t i = 0; i < count; i++)
     {
         uint32_t id;
-        ERROR_CHECK_FNS_CLEAN(fdcan_trcv_buf_pop(&fdcan_recv_pkt_buf, &vec_byte, &id), vec_byte_free(&vec_byte));
+        if (ERROR_CHECK_FNS_RAW(fdcan_trcv_buf_pop(&fdcan_recv_pkt_buf, &vec_byte, &id))) break;
         // recv_pkt_proc0(&vec_byte);
 
         https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, (int)vec_byte.data[0]);

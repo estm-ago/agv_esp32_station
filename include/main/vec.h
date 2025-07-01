@@ -1,8 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
+#include "main/config.h"
 #include "main/fn_state.h"
 
 typedef struct VecByte
@@ -20,7 +18,7 @@ typedef struct VecByte
  * 
  * @return FNS_OK 成功移除
  */
-FnState vec_rm_all(VecByte *self);
+void vec_rm_all(VecByte *self);
 /**
  * @brief 從 Vec 中移除指定範圍的資料
  * 
@@ -50,7 +48,7 @@ FnState vec_byte_new(VecByte *self, size_t cap);
  * 
  * @return FNS_OK
  */
-FnState vec_byte_free(VecByte *self);
+void vec_byte_free(VecByte *self);
 /**
  * @brief 把 VecByte 裡的資料「搬到索引 0 開始」(head = 0)，並保留原本的儲存順序
  *
@@ -58,7 +56,7 @@ FnState vec_byte_free(VecByte *self);
  * 
  * @return FNS_OK 重新對齊成功
  */
-FnState vec_byte_realign(VecByte *self);
+void vec_byte_realign(VecByte *self);
 /**
  * @brief 從 VecU8 中，讀取相對於 head 的第 id 個位元組
  *
@@ -104,6 +102,14 @@ FnState vec_byte_push(VecByte *self, const void *src, size_t src_len);
  */
 FnState vec_byte_push_byte(VecByte *self, uint8_t value);
 /**
+ * @brief 交換 16-bit 整數的大小端
+ *
+ * @param value 要交換大小端的 16-bit 值
+ * 
+ * @return uint16_t 交換後的 16-bit 值
+ */
+uint16_t swap_u16(const uint16_t value);
+/**
  * @brief 將原始值轉換為 IEEE-754 大端序並推入 VecByte
  * 
  * @param self 指向 VecByte 實例的指標
@@ -113,7 +119,23 @@ FnState vec_byte_push_byte(VecByte *self, uint8_t value);
  * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push_u16(VecByte *self, uint16_t value);
-
+/**
+ * @brief 交換 32-bit 整數的大小端
+ *
+ * @param value 要交換大小端的 32-bit 值
+ * 
+ * @return uint32_t 交換後的 32-bit 值
+ */
+uint32_t swap_u32(uint32_t value);
+/**
+ * @brief 將原始值轉換為 IEEE-754 大端序並推入 VecByte
+ * 
+ * @param self 指向 VecByte 實例的指標
+ * @param value 要推入的原始值
+ * 
+ * @return FNS_OK 成功推入
+ * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
+ */
 FnState vec_byte_push_u32(VecByte *self, uint32_t value);
 /**
  * @brief 將原始值轉換為 IEEE-754 大端序並推入 VecByte

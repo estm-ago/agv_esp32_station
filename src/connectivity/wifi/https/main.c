@@ -128,7 +128,7 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
         ESP_LOGI(TAG, "Buf count: %d", https_trsm_pkt_buf.trcv_buf.len);
         #endif
     }
-    ERROR_CHECK_FNS_RETURN(vec_byte_free(&vec_byte));
+    vec_byte_free(&vec_byte);
     return FNS_OK;
 }
 
@@ -146,7 +146,7 @@ static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
         {
             if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22));
-            ERROR_CHECK_FNS_RETURN(vec_rm_all(vec_byte));
+            vec_rm_all(vec_byte);
             ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, 0x31));
             ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
             break;
@@ -155,7 +155,7 @@ static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
         {
             if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32));
-            ERROR_CHECK_FNS_RETURN(vec_rm_all(vec_byte));
+            vec_rm_all(vec_byte);
             ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, 0x31));
             ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
             break;
@@ -195,7 +195,7 @@ static UNUSED_FNC FnState recv_pkt_proc(size_t count)
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, HTTPS_RECV_VEC_MAX));
     for (size_t i = 0; i < count; i++)
     {
-        ERROR_CHECK_FNS_BREAK(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_byte, &sockfd));
+        if (ERROR_CHECK_FNS_RAW(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_byte, &sockfd))) break;
         recv_pkt_proc0(&vec_byte, sockfd);
     }
     vec_byte_free(&vec_byte);

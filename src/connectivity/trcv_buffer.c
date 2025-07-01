@@ -21,8 +21,8 @@ FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte)
     if (self->len >= self->cap) return FNS_BUF_OVERFLOW;
     size_t tail = (self->head + self->len) % self->cap;
     vec_rm_all(&self->vecs[tail]);
-    ERROR_CHECK_FNS_RETURN(vec_byte_realign(vec_byte));
-    ERROR_CHECK_FNS_RETURN(vec_byte_push(&self->vecs[tail], vec_byte->data, vec_byte->len));
+    vec_byte_realign(vec_byte);
+    ERROR_CHECK_FNS_RETURN(vec_byte_push(&self->vecs[tail], vec_byte->data + vec_byte->head, vec_byte->len));
     self->len++;
     return FNS_OK;
 }

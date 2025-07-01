@@ -1,20 +1,21 @@
 #include "main/vec.h"
-#include <stdlib.h>
-#include <string.h>
-#include "main/config.h"
 
-inline FnState vec_rm_all(VecByte *self)
+inline void vec_rm_all(VecByte *self)
 {
     self->head = 0;
     self->len  = 0;
-    return FNS_OK;
+    return;
 }
 
 FnState vec_rm_range(VecByte *self, size_t offset, size_t size)
 {
     if (offset >= self->len) return FNS_FAIL;
     if (size == 0) return FNS_OK;
-    if (size >= self->len) return vec_rm_all(self);
+    if (size >= self->len)
+    {
+        vec_rm_all(self);
+        return FNS_OK;
+    }
     if (offset == 0)
     {
         self->head = (self->head + size) % self->cap;
@@ -43,7 +44,7 @@ FnState vec_byte_new(VecByte *self, size_t cap)
     return FNS_OK;
 }
 
-FnState vec_byte_free(VecByte *self)
+void vec_byte_free(VecByte *self)
 {
     vec_rm_all(self);
     if (self->data) {
@@ -51,12 +52,12 @@ FnState vec_byte_free(VecByte *self)
         self->data = NULL;
     }
     self->cap = 0;
-    return FNS_OK;
+    return;
 }
 
-FnState vec_byte_realign(VecByte *self)
+void vec_byte_realign(VecByte *self)
 {
-    if (self->len == 0 || self->head == 0) return FNS_OK;
+    if (self->len == 0 || self->head == 0) return;
     size_t first_part = self->cap - self->head;
     if (first_part >= self->len)
     {
@@ -71,7 +72,7 @@ FnState vec_byte_realign(VecByte *self)
         memmove(self->data + first_part, tmp, second_part);
     }
     self->head = 0;
-    return FNS_OK;
+    return;
 }
 
 FnState vec_byte_get_byte(const VecByte *self, uint8_t *u8, size_t id)
@@ -119,14 +120,7 @@ inline FnState vec_byte_push_byte(VecByte *self, uint8_t value)
     return vec_byte_push(self, &value, 1);
 }
 
-/**
- * @brief 交換 16-bit 整數的大小端
- *
- * @param value 要交換大小端的 16-bit 值
- * 
- * @return uint16_t 交換後的 16-bit 值
- */
-static inline uint16_t swap16(const uint16_t value)
+inline uint16_t swap_u16(const uint16_t value)
 {
     return  ((value & 0x00FFU) << 8) |
             ((value & 0xFF00U) >> 8);
@@ -134,18 +128,11 @@ static inline uint16_t swap16(const uint16_t value)
 
 FnState vec_byte_push_u16(VecByte *self, uint16_t value)
 {
-    uint16_t val = swap16(value);
+    uint16_t val = swap_u16(value);
     return vec_byte_push(self, &val, sizeof(uint16_t));
 }
 
-/**
- * @brief 交換 32-bit 整數的大小端
- *
- * @param value 要交換大小端的 32-bit 值
- * 
- * @return uint32_t 交換後的 32-bit 值
- */
-static inline uint32_t swap32(uint32_t value)
+inline uint32_t swap_u32(uint32_t value)
 {
     return  ((value & 0x000000FFU) << 24) |
             ((value & 0x0000FF00U) <<  8) | 
@@ -155,7 +142,7 @@ static inline uint32_t swap32(uint32_t value)
 
 FnState vec_byte_push_u32(VecByte *self, uint32_t value)
 {
-    uint32_t val = swap32(value);
+    uint32_t val = swap_u32(value);
     return vec_byte_push(self, &val, sizeof(uint32_t));
 }
 
@@ -164,6 +151,6 @@ FnState vec_byte_push_f32(VecByte *self, float value)
     uint32_t u32;
     uint8_t u32_len = sizeof(u32);
     memcpy(&u32, &value, u32_len);
-    u32 = swap32(u32);
+    u32 = swap_u32(u32);
     return vec_byte_push(self, &u32, u32_len);
 }

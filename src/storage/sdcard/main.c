@@ -13,8 +13,6 @@
 #include <sys/stat.h>
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
-#include "main/config.h"
-#include "main/fn_state.h"
 #include "storage/sdcard/main.h"
 
 static const char *TAG = "example";
@@ -189,6 +187,4 @@ void sd_main(void)
     if (ret != ESP_OK) {
         return;
     }
-
-    sd_unmount();
 }
