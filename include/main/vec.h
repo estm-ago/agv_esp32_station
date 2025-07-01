@@ -15,8 +15,6 @@ typedef struct VecByte
  * @brief 從 Vec 中移除全部資料
  * 
  * @param self   指向 Vec 實例的指標
- * 
- * @return FNS_OK 成功移除
  */
 void vec_rm_all(VecByte *self);
 /**
@@ -45,16 +43,12 @@ FnState vec_byte_new(VecByte *self, size_t cap);
  * @brief 釋放 VecByte 佔用的資源，並重置欄位
  * 
  * @param self 指向 VecByte 實例的指標
- * 
- * @return FNS_OK
  */
 void vec_byte_free(VecByte *self);
 /**
  * @brief 把 VecByte 裡的資料「搬到索引 0 開始」(head = 0)，並保留原本的儲存順序
  *
  * @param self 指向 VecByte 實例的指標
- * 
- * @return FNS_OK 重新對齊成功
  */
 void vec_byte_realign(VecByte *self);
 /**
