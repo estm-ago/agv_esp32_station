@@ -1,11 +1,6 @@
 #include "connectivity/uart/main.h"
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <esp_system.h>
-#include <esp_log.h>
 #include "string.h"
 #include "driver/uart.h"
-#include "driver/gpio.h"
 #include "main/global_variable.h"
 #include "main/config.h"
 #include "connectivity/trcv_buffer.h"
@@ -142,7 +137,7 @@ void uart_setup(void)
     };
     uart_param_config(STM32_UART, &uart_config);
     // Tx:GPIO17 Rx:GPIO16
-    uart_set_pin(STM32_UART, STM32_UART_TXD, STM32_UART_RXD, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    uart_set_pin(STM32_UART, STM32_UART_TX, STM32_UART_RX, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     FNS_ERROR_CHECK_VOID(vec_byte_new(&uart_tr_buf, UART_VEC_BYTE_CAP + 2));
     FNS_ERROR_CHECK_VOID(vec_byte_new(&uart_rv_buf, UART_VEC_BYTE_CAP + 2));
     FNS_ERROR_CHECK_VOID(connect_trcv_buf_setup(&uart_tr_pkt_buf, UART_TRCV_BUF_CAP, UART_VEC_BYTE_CAP));

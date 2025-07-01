@@ -12,6 +12,8 @@ idf_component_register(
         esp_https_server
         esp_timer
         esp_eth
+        fatfs
+        sdmmc
     EMBED_TXTFILES 
         "../certs/servercert.pem"
         "../certs/prvtkey.pem"

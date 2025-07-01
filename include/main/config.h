@@ -34,14 +34,24 @@
 #define HTTPS_RECV_BUF_MAX 10
 
 // #define DISABLE_FDCAN
+#define FDCAN_GPIO_TX       GPIO_NUM_25
+#define FDCAN_GPIO_RX       GPIO_NUM_26
 #define FDCAN_VEC_BYTE_CAP  8
 #define FDCAN_TRCV_BUF_CAP  10
 
+#define STM32_UART          UART_NUM_2
+#define STM32_UART_TX       GPIO_NUM_17
+#define STM32_UART_RX       GPIO_NUM_16
 #define UART_BAUDRATE       115200
 #define UART_VEC_BYTE_CAP   128
 #define UART_TRCV_BUF_CAP   10
 #define UART_START_CODE     ((uint8_t) '>')
 #define UART_END_CODE       ((uint8_t) '\n')
+
+#define SD_GPIO_CS          GPIO_NUM_5
+#define SD_GPIO_CLK         GPIO_NUM_18
+#define SD_GPIO_MISO        GPIO_NUM_19
+#define SD_GPIO_MOSI        GPIO_NUM_23
 
 // configMAX_PRIORITIES = 25
 

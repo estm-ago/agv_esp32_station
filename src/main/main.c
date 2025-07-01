@@ -18,6 +18,7 @@
 #include "connectivity/fdcan/main.h"
 #include "connectivity/wifi/main.h"
 #include "connectivity/wifi/https/main.h"
+#include "storage/sdcard/main.h"
 
 static const char *TAG = "user_main";
 
@@ -28,10 +29,12 @@ void app_main(void) {
     ESP_ERROR_CHECK(esp_netif_init());
 
     // uart_setup();
-    fdcan_setup();
+    // fdcan_setup();
 
-    wifi_setup_sta();
-    https_server_setup();
+    // wifi_setup_sta();
+    // https_server_setup();
+
+    sd_main();
 
     while (1) {
         // ESP_LOGI(TAG, "Running main loop...");

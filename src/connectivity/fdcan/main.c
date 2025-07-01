@@ -149,7 +149,7 @@ static UNUSED_FNC void fdcan_data_task(void *arg)
 void fdcan_setup(void)
 {
     fdcan_init();
-    const twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(GPIO_NUM_25, GPIO_NUM_26, TWAI_MODE_NORMAL);
+    const twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(FDCAN_GPIO_TX, FDCAN_GPIO_RX, TWAI_MODE_NORMAL);
     const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
     const twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
     esp_err_t err = twai_driver_install(&g_config, &t_config, &f_config);
