@@ -1,5 +1,7 @@
 #pragma once
 
+#include <esp_vfs_fat.h>
+#include <sdmmc_cmd.h>
 #include "main/config.h"
 #include "main/fn_state.h"
 

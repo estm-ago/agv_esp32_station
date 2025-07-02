@@ -1,13 +1,13 @@
 #include "main/vec.h"
 
-inline void vec_rm_all(VecByte *self)
+inline void vec_rm_all(VecByte* self)
 {
     self->head = 0;
     self->len  = 0;
     return;
 }
 
-FnState vec_rm_range(VecByte *self, size_t offset, size_t size)
+FnState vec_rm_range(VecByte* self, size_t offset, size_t size)
 {
     if (offset >= self->len) return FNS_FAIL;
     if (size == 0) return FNS_OK;
@@ -33,7 +33,7 @@ FnState vec_rm_range(VecByte *self, size_t offset, size_t size)
     return FNS_OK;
 }
 
-FnState vec_byte_new(VecByte *self, size_t cap)
+FnState vec_byte_new(VecByte* self, size_t cap)
 {
     if (cap == 0 || cap > VEC_BYTE_MAX_CAP) return FNS_FAIL;
     self->data = malloc(cap * sizeof(*self->data));
@@ -44,7 +44,7 @@ FnState vec_byte_new(VecByte *self, size_t cap)
     return FNS_OK;
 }
 
-void vec_byte_free(VecByte *self)
+void vec_byte_free(VecByte* self)
 {
     vec_rm_all(self);
     if (self->data) {
@@ -55,7 +55,7 @@ void vec_byte_free(VecByte *self)
     return;
 }
 
-void vec_byte_realign(VecByte *self)
+void vec_byte_realign(VecByte* self)
 {
     if (self->len == 0 || self->head == 0) return;
     size_t first_part = self->cap - self->head;
@@ -75,21 +75,12 @@ void vec_byte_realign(VecByte *self)
     return;
 }
 
-FnState vec_byte_get_byte(const VecByte *self, uint8_t *u8, size_t id)
-{
-    if (self->len == 0) return FNS_BUF_EMPTY;
-    if (id >= self->len) return FNS_FAIL;
-    size_t idx = (self->head + id) % self->cap;
-    *u8 = self->data[idx];
-    return FNS_OK;
-}
-
-FnState vec_byte_starts_with(const VecByte *self, const uint8_t *pre, size_t pre_len)
+FnState vec_byte_starts_with(const VecByte* self, const uint8_t *pre, size_t pre_len)
 {
     if (self->len < pre_len) return FNS_NO_MATCH;
     if (
-        (self->head + pre_len <= self->cap) &&
-        (memcmp(self->data + self->head, pre, pre_len) == 0)
+           (self->head + pre_len <= self->cap)
+        && (memcmp(self->data + self->head, pre, pre_len) == 0)
     ) return FNS_OK;
     size_t first_part  = self->cap - self->head;
     size_t remaining = pre_len - first_part;
@@ -98,13 +89,20 @@ FnState vec_byte_starts_with(const VecByte *self, const uint8_t *pre, size_t pre
     return FNS_OK;
 }
 
-FnState vec_byte_push(VecByte *self, const void *src, size_t src_len)
+FnState vec_byte_add_len(VecByte* self, size_t len)
+{
+    if ((self->data == NULL) || (len > self->cap)) return FNS_BUF_OVERFLOW;
+    self->len += len;
+    return FNS_OK;
+}
+
+FnState vec_byte_push(VecByte* self, const void *src, size_t src_len)
 {
     if (self->len + src_len > self->cap) return FNS_BUF_OVERFLOW;
     size_t tail = self->head + self->len;
     if (
-        (tail >= self->cap) ||
-        (tail + src_len >= self->cap)
+           (tail >= self->cap)
+        || (tail + src_len >= self->cap)
     )
     {
         vec_byte_realign(self);
@@ -115,18 +113,27 @@ FnState vec_byte_push(VecByte *self, const void *src, size_t src_len)
     return FNS_OK;
 }
 
-inline FnState vec_byte_push_byte(VecByte *self, uint8_t value)
+FnState vec_byte_get_byte(const VecByte* self, size_t id, uint8_t *u8)
+{
+    if (self->len == 0) return FNS_BUF_EMPTY;
+    if (id >= self->len) return FNS_FAIL;
+    size_t idx = (self->head + id) % self->cap;
+    *u8 = self->data[idx];
+    return FNS_OK;
+}
+
+inline FnState vec_byte_push_byte(VecByte* self, uint8_t value)
 {
     return vec_byte_push(self, &value, 1);
 }
 
 inline uint16_t swap_u16(const uint16_t value)
 {
-    return  ((value & 0x00FFU) << 8) |
-            ((value & 0xFF00U) >> 8);
+    return    ((value & 0x00FFU) << 8)
+            | ((value & 0xFF00U) >> 8);
 }
 
-FnState vec_byte_push_u16(VecByte *self, uint16_t value)
+FnState vec_byte_push_u16(VecByte* self, uint16_t value)
 {
     uint16_t val = swap_u16(value);
     return vec_byte_push(self, &val, sizeof(uint16_t));
@@ -134,23 +141,33 @@ FnState vec_byte_push_u16(VecByte *self, uint16_t value)
 
 inline uint32_t swap_u32(uint32_t value)
 {
-    return  ((value & 0x000000FFU) << 24) |
-            ((value & 0x0000FF00U) <<  8) | 
-            ((value & 0x00FF0000U) >>  8) | 
-            ((value & 0xFF000000U) >> 24);
+    return    ((value & 0x000000FFU) << 24)
+            | ((value & 0x0000FF00U) <<  8)
+            | ((value & 0x00FF0000U) >>  8)
+            | ((value & 0xFF000000U) >> 24);
 }
 
-FnState vec_byte_push_u32(VecByte *self, uint32_t value)
+FnState vec_byte_get_u32(VecByte* self, size_t id, uint32_t* value)
+{
+    if (self->len < id + sizeof(uint32_t)) return FNS_BUF_NOT_ENOU;
+    size_t head = self->head + id;
+    *value =  ((uint32_t)self->data[head    ] << 24)
+            | ((uint32_t)self->data[head + 1] << 16)
+            | ((uint32_t)self->data[head + 2] <<  8)
+            | ((uint32_t)self->data[head + 3]      );
+    return FNS_OK;
+}
+
+FnState vec_byte_push_u32(VecByte* self, uint32_t value)
 {
     uint32_t val = swap_u32(value);
     return vec_byte_push(self, &val, sizeof(uint32_t));
 }
 
-FnState vec_byte_push_f32(VecByte *self, float value)
+FnState vec_byte_push_f32(VecByte* self, float value)
 {
     uint32_t u32;
-    uint8_t u32_len = sizeof(u32);
-    memcpy(&u32, &value, u32_len);
+    memcpy(&u32, &value, sizeof(u32));
     u32 = swap_u32(u32);
-    return vec_byte_push(self, &u32, u32_len);
+    return vec_byte_push(self, &u32, sizeof(u32));
 }

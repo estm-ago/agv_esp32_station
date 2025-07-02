@@ -1,21 +1,7 @@
-/* SD card and FAT filesystem example.
-   This example uses SPI peripheral to communicate with SD card.
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
-#include <string.h>
-#include <sys/unistd.h>
-#include <sys/stat.h>
-#include "esp_vfs_fat.h"
-#include "sdmmc_cmd.h"
 #include "storage/sdcard/main.h"
+#include "storage/sdcard/file.h"
 
-static const char *TAG = "example";
+static const char *TAG = "user_sd_card";
 
 #define EXAMPLE_MAX_CHAR_SIZE    64
 #define MOUNT_POINT "/sdcard"
@@ -24,42 +10,39 @@ static sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
 static sdmmc_card_t *card;
 static const char mount_point[] = MOUNT_POINT;
 
-static esp_err_t s_example_write_file(const char *path, char *data)
-{
-    ESP_LOGI(TAG, "Opening file %s", path);
-    FILE *f = fopen(path, "w");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for writing");
-        return ESP_FAIL;
-    }
-    fprintf(f, data);
-    fclose(f);
-    ESP_LOGI(TAG, "File written");
+// static esp_err_t s_example_write_file(const char *path, char *data)
+// {
+//     ESP_LOGI(TAG, "Opening file %s", path);
+//     FILE *f = fopen(path, "w");
+//     if (f == NULL) {
+//         ESP_LOGE(TAG, "Failed to open file for writing");
+//         return ESP_FAIL;
+//     }
+//     fprintf(f, data);
+//     fclose(f);
+//     ESP_LOGI(TAG, "File written");
+//     return ESP_OK;
+// }
 
-    return ESP_OK;
-}
-
-static esp_err_t s_example_read_file(const char *path)
-{
-    ESP_LOGI(TAG, "Reading file %s", path);
-    FILE *f = fopen(path, "r");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for reading");
-        return ESP_FAIL;
-    }
-    char line[EXAMPLE_MAX_CHAR_SIZE];
-    fgets(line, sizeof(line), f);
-    fclose(f);
-
-    // strip newline
-    char *pos = strchr(line, '\n');
-    if (pos) {
-        *pos = '\0';
-    }
-    ESP_LOGI(TAG, "Read from file: '%s'", line);
-
-    return ESP_OK;
-}
+// static esp_err_t s_example_read_file(const char *path)
+// {
+//     ESP_LOGI(TAG, "Reading file %s", path);
+//     FILE *f = fopen(path, "r");
+//     if (f == NULL) {
+//         ESP_LOGE(TAG, "Failed to open file for reading");
+//         return ESP_FAIL;
+//     }
+//     char line[EXAMPLE_MAX_CHAR_SIZE];
+//     fgets(line, sizeof(line), f);
+//     fclose(f);
+//     // strip newline
+//     char *pos = strchr(line, '\n');
+//     if (pos) {
+//         *pos = '\0';
+//     }
+//     ESP_LOGI(TAG, "Read from file: '%s'", line);
+//     return ESP_OK;
+// }
 
 FnState sd_mount(void)
 {
@@ -142,12 +125,32 @@ void sd_main(void)
 {
     sd_mount();
 
+    const char *file_test = MOUNT_POINT"/test";
+    FileHeader header = {
+        .type = 4,
+        .cap = 5,
+    };
+    file_new(file_test, &header);
+
+    VecByte vec_byte;
+    vec_byte_new(&vec_byte, 16);
+    vec_byte_push_u32(&vec_byte, 16);
+    vec_byte_push_u32(&vec_byte, 256);
+    vec_byte_push_u32(&vec_byte, 4096);
+    vec_byte_push_u32(&vec_byte, 65536);
+    file_data_add(file_test, &vec_byte);
+
+    file_data_get(file_test, 5, &vec_byte);
+    ESP_LOG_BUFFER_HEXDUMP(TAG, vec_byte.data, vec_byte.len, ESP_LOG_INFO);
+
+    /*
     // Use POSIX and C standard library functions to work with files.
 
     // First create a file.
     const char *file_hello = MOUNT_POINT"/hello.txt";
     char data[EXAMPLE_MAX_CHAR_SIZE];
     snprintf(data, EXAMPLE_MAX_CHAR_SIZE, "%s %s!\n", "Hello", card->cid.name);
+
     esp_err_t ret = s_example_write_file(file_hello, data);
     if (ret != ESP_OK) {
         return;
@@ -187,4 +190,5 @@ void sd_main(void)
     if (ret != ESP_OK) {
         return;
     }
+    */
 }

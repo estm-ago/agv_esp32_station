@@ -12,10 +12,12 @@
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_event.h>
+#include <sys/unistd.h>
+#include <sys/stat.h>
+#include <driver/gpio.h>
 #include <freertos/FreeRTOSConfig.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include "driver/gpio.h"
 
 #define UNUSED_FNC __attribute__((unused))
 
@@ -55,6 +57,7 @@
 #define SD_GPIO_CLK         GPIO_NUM_18
 #define SD_GPIO_MISO        GPIO_NUM_19
 #define SD_GPIO_MOSI        GPIO_NUM_23
+#define SD_FILE_HEAD_END    '\n'
 
 // configMAX_PRIORITIES = 25
 

@@ -135,7 +135,7 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
 static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
 {
     uint8_t code;
-    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, &code, 0));
+    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
     switch (code)
     {
         case CMD_B0_DATA:
@@ -162,7 +162,7 @@ static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
         }
         // case 0x74:
         // {
-        //     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, &code, 1));
+        //     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
         //     ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
         //     switch (code)
         //     {
