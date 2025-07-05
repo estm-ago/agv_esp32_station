@@ -133,7 +133,7 @@ static UNUSED_FNC FnState recv_pkt_proc_inner(VecByte* vec_byte)
                     uint32_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 0, &value));
                     // Todo vec_byte_check_len(vec_byte, 0);
-                    vec_byte_push_byte(&stg_b_m_left_speed, value);
+                    vec_byte_push_u32(&stg_b_m_left_speed, value);
                     break;
                 }
                 case CMD_B1_RIGHT_SPEED:
@@ -141,7 +141,7 @@ static UNUSED_FNC FnState recv_pkt_proc_inner(VecByte* vec_byte)
                     ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
                     uint32_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 0, &value));
-                    vec_byte_push_byte(&stg_b_m_right_speed, value);
+                    vec_byte_push_u32(&stg_b_m_right_speed, value);
                     break;
                 }
                 case CMD_B1_LEFT_DUTY:

@@ -37,8 +37,9 @@ void storage_loop(void)
     {
         file_data_add(stg_f_m_left_speed, &stg_b_m_left_speed);
         ESP_LOG_BUFFER_HEXDUMP(TAG, stg_b_m_left_speed.data, stg_b_m_left_speed.len, ESP_LOG_INFO);
+        vec_rm_all(&stg_b_m_left_speed);
         VecByte vec_byte;
-        vec_byte_new(&vec_byte, 100);
+        vec_byte_new(&vec_byte, 240);
         file_data_get(stg_f_m_left_speed, vec_byte.cap / sizeof(uint32_t), &vec_byte);
         ESP_LOG_BUFFER_HEXDUMP(TAG, vec_byte.data, vec_byte.len, ESP_LOG_INFO);
     }
