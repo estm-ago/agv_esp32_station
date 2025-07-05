@@ -1,13 +1,14 @@
 #include "connectivity/fdcan/main.h"
-#include <string.h>
 #include "driver/twai.h"
+#include "connectivity/cmds.h"
 #include "connectivity/wifi/https/main.h"
+#include "storage/main.h"
 
 static const char *TAG = "user_fdcan_main";
 
 twai_status_info_t twai_state;
 
-FncState fdacn_data_trsm_ready = FNC_ENABLE;
+FncState fdacn_data_trsm_ready = FNC_DISABLE;
 
 static VecByte fdcan_trsm_buf;
 static twai_message_t fdcan_trsm_msg = {
@@ -88,6 +89,8 @@ static UNUSED_FNC FnState pkt_transmit(void)
     ESP_LOGI(TAG, "Msg trsm ID: 0x%lX  LEN: %02X >>>", fdcan_trsm_msg.identifier, fdcan_trsm_msg.data_length_code);
     ESP_LOG_BUFFER_HEXDUMP(TAG, fdcan_trsm_msg.data, fdcan_trsm_msg.data_length_code, ESP_LOG_INFO);
     esp_err_t err = twai_transmit(&fdcan_trsm_msg, pdMS_TO_TICKS(1));
+    twai_get_status_info(&twai_state);
+    ESP_LOGI(TAG, "State=%d, TEC=%lu, REC=%lu", twai_state.state, twai_state.tx_error_counter, twai_state.rx_error_counter);
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Msg trsm failed: %s", esp_err_to_name(err));
@@ -103,25 +106,88 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
     if (fdacn_data_trsm_ready == FNC_ENABLE)
     {
         #ifdef ENABLE_CON_PKT_TEST
-        // ERROR_CHECK_FNS_CLEAN(vec_byte_push(&vec_byte, (uint8_t[]){0x00, 0x10}, 2), vec_byte_free(&vec_byte));
-        // ERROR_CHECK_FNS_CLEAN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x24), vec_byte_free(&vec_byte));
+        ERROR_CHECK_FNS_WRI_PUSH(vec_byte_push(&vec_byte, (uint8_t[]){0x00, 0x10}, 2),
+            fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x40), vec_byte_free(&vec_byte));
         #endif
     }
     vec_byte_free(&vec_byte);
     return FNS_OK;
 }
 
+static UNUSED_FNC FnState recv_pkt_proc_inner(VecByte* vec_byte)
+{
+    uint8_t code;
+    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
+    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 1));
+    switch (code)
+    {
+        case CMD_B0_DATA:
+        {
+            ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
+            ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 1));
+            switch (code)
+            {
+                case CMD_B1_LEFT_SPEED:
+                {
+                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
+                    uint32_t value;
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 0, &value));
+                    // Todo vec_byte_check_len(vec_byte, 0);
+                    vec_byte_push_byte(&stg_b_m_left_speed, value);
+                    break;
+                }
+                case CMD_B1_RIGHT_SPEED:
+                {
+                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
+                    uint32_t value;
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 0, &value));
+                    vec_byte_push_byte(&stg_b_m_right_speed, value);
+                    break;
+                }
+                case CMD_B1_LEFT_DUTY:
+                {
+                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
+                    uint8_t value;
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 0, &value));
+                    vec_byte_push_byte(&stg_b_m_left_duty, value);
+                    break;
+                }
+                case CMD_B1_RIGHT_DUTY:
+                {
+                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
+                    uint8_t value;
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 0, &value));
+                    vec_byte_push_byte(&stg_b_m_right_duty, value);
+                    break;
+                }
+                default:
+                {
+                    last_error = FNS_NO_MATCH;
+                    return FNS_NO_MATCH;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            last_error = FNS_NO_MATCH;
+            return FNS_NO_MATCH;
+        }
+    }
+    return FNS_OK;
+}
+
 static UNUSED_FNC FnState recv_pkt_proc(size_t count)
 {
     VecByte vec_byte;
+    uint32_t id;
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, HTTPS_RECV_VEC_MAX));
     for (size_t i = 0; i < count; i++)
     {
-        uint32_t id;
         if (ERROR_CHECK_FNS_RAW(fdcan_trcv_buf_pop(&fdcan_recv_pkt_buf, &vec_byte, &id))) break;
-        // recv_pkt_proc0(&vec_byte);
+        recv_pkt_proc_inner(&vec_byte);
 
-        https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, (int)vec_byte.data[0]);
+        // https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, (int)vec_byte.data[0]);
     }
     vec_byte_free(&vec_byte);
     return FNS_OK;
@@ -132,14 +198,12 @@ static UNUSED_FNC void fdcan_data_task(void *arg)
     size_t tick = 0;
     while (1)
     {
-        twai_get_status_info(&twai_state);
         pkt_transmit();
         recv_pkt_proc(5);
         if (tick % 100 == 0)
         {
             tick = 0;
             trsm_pkt_proc();
-            // ESP_LOGI(TAG, "State=%d, TEC=%lu, REC=%lu", twai_state.state, twai_state.tx_error_counter, twai_state.rx_error_counter);
         }
         vTaskDelay(pdMS_TO_TICKS(10));
         tick++;

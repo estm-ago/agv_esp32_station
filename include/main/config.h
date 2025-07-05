@@ -53,6 +53,8 @@
 #define UART_START_CODE     ((uint8_t) '>')
 #define UART_END_CODE       ((uint8_t) '\n')
 
+#define STORAGE_BUF_MAX     30
+#define STORAGE_BUF_TRI     20
 #define SD_GPIO_CS          GPIO_NUM_5
 #define SD_GPIO_CLK         GPIO_NUM_18
 #define SD_GPIO_MISO        GPIO_NUM_19

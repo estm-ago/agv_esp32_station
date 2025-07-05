@@ -113,12 +113,18 @@ FnState vec_byte_push(VecByte* self, const void *src, size_t src_len)
     return FNS_OK;
 }
 
-FnState vec_byte_get_byte(const VecByte* self, size_t id, uint8_t *u8)
+FnState vec_byte_get_byte(const VecByte* self, size_t id, uint8_t *value)
 {
-    if (self->len == 0) return FNS_BUF_EMPTY;
+    if (self->len < id + sizeof(*value)) return FNS_BUF_NOT_ENOU;
     if (id >= self->len) return FNS_FAIL;
-    size_t idx = (self->head + id) % self->cap;
-    *u8 = self->data[idx];
+    *value = self->data[(self->head + id) % self->cap];
+    return FNS_OK;
+}
+
+inline FnState vec_byte_pop_byte(VecByte* self, size_t id, uint8_t* value)
+{
+    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(self, id, value));
+    ERROR_CHECK_FNS_RETURN(vec_rm_range(self, id, sizeof(*value)));
     return FNS_OK;
 }
 
@@ -136,7 +142,7 @@ inline uint16_t swap_u16(const uint16_t value)
 FnState vec_byte_push_u16(VecByte* self, uint16_t value)
 {
     uint16_t val = swap_u16(value);
-    return vec_byte_push(self, &val, sizeof(uint16_t));
+    return vec_byte_push(self, &val, sizeof(value));
 }
 
 inline uint32_t swap_u32(uint32_t value)
@@ -149,19 +155,27 @@ inline uint32_t swap_u32(uint32_t value)
 
 FnState vec_byte_get_u32(VecByte* self, size_t id, uint32_t* value)
 {
-    if (self->len < id + sizeof(uint32_t)) return FNS_BUF_NOT_ENOU;
+    if (self->len < id + sizeof(*value)) return FNS_BUF_NOT_ENOU;
+    if (id >= self->len) return FNS_FAIL;
     size_t head = self->head + id;
-    *value =  ((uint32_t)self->data[head    ] << 24)
-            | ((uint32_t)self->data[head + 1] << 16)
-            | ((uint32_t)self->data[head + 2] <<  8)
-            | ((uint32_t)self->data[head + 3]      );
+    *value =  ((uint32_t)self->data[ head      % self->cap] << 24)
+            | ((uint32_t)self->data[(head + 1) % self->cap] << 16)
+            | ((uint32_t)self->data[(head + 2) % self->cap] <<  8)
+            | ((uint32_t)self->data[(head + 3) % self->cap]      );
+    return FNS_OK;
+}
+
+inline FnState vec_byte_pop_u32(VecByte* self, size_t id, uint32_t* value)
+{
+    ERROR_CHECK_FNS_RETURN(vec_byte_get_u32(self, id, value));
+    ERROR_CHECK_FNS_RETURN(vec_rm_range(self, id, sizeof(*value)));
     return FNS_OK;
 }
 
 FnState vec_byte_push_u32(VecByte* self, uint32_t value)
 {
     uint32_t val = swap_u32(value);
-    return vec_byte_push(self, &val, sizeof(uint32_t));
+    return vec_byte_push(self, &val, sizeof(value));
 }
 
 FnState vec_byte_push_f32(VecByte* self, float value)

@@ -63,6 +63,8 @@ void vec_byte_realign(VecByte* self);
  * @return FNS_FAIL id 超出範圍
  */
 FnState vec_byte_get_byte(const VecByte* self, size_t id, uint8_t *u8);
+
+FnState vec_byte_pop_byte(VecByte* self, size_t id, uint8_t* value);
 /**
  * @brief 檢查 VecByte 起始位置是否以指定序列開頭
  * 
@@ -125,6 +127,8 @@ FnState vec_byte_push_u16(VecByte* self, uint16_t value);
 uint32_t swap_u32(uint32_t value);
 
 FnState vec_byte_get_u32(VecByte* self, size_t id, uint32_t* value);
+
+FnState vec_byte_pop_u32(VecByte* self, size_t id, uint32_t* value);
 /**
  * @brief 將原始值轉換為 IEEE-754 大端序並推入 VecByte
  * 

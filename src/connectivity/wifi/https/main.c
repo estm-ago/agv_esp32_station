@@ -122,7 +122,7 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
     if (https_data_trsm_ready == FNC_ENABLE)
     {
         #ifdef ENABLE_CON_PKT_TEST
-        uint8_t msg[] = "Hello";
+        uint8_t msg[] = "Hello\n";
         ERROR_CHECK_FNS_WRI_PUSH(vec_byte_push(&vec_byte, msg, sizeof(msg)),
             https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, 57), vec_byte_free(&vec_byte));
         ESP_LOGI(TAG, "Buf count: %d", https_trsm_pkt_buf.trcv_buf.len);
@@ -132,10 +132,21 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
     return FNS_OK;
 }
 
-static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
+static FnState recv_pkt_return(uint8_t code, int sockfd)
+{
+    VecByte vec_byte;
+    ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, 2));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&vec_byte, code));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&vec_byte, '\n'));
+    ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, sockfd));
+    return FNS_OK;
+}
+
+static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
 {
     uint8_t code;
     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
+    ESP_LOGI(TAG, "recv_pkt_proc_inner: %02X", code);
     switch (code)
     {
         case CMD_B0_DATA:
@@ -147,45 +158,82 @@ static FnState recv_pkt_proc0(VecByte* vec_byte, int sockfd)
             if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22));
             vec_rm_all(vec_byte);
-            ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, 0x31));
-            ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
-            break;
+            return recv_pkt_return(0x31, sockfd);
         }
         case CMD_B0_ARM_CONTROL:
         {
             if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32));
             vec_rm_all(vec_byte);
-            ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, 0x31));
-            ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
+            return recv_pkt_return(0x31, sockfd);
+        }
+        case 0x74:  // t
+        {
+            ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
+            ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
+            ESP_LOGI(TAG, "recv_pkt_proc_inner: %02X", code);
+            switch (code)
+            {
+                case 0x66:  // f
+                {
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
+                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 1));
+                    switch (code)
+                    {
+                        case 0x30:  // 0
+                            fdacn_data_trsm_ready = FNC_DISABLE;
+                            return recv_pkt_return(0x31, sockfd);
+                        case 0x31:  // 1
+                            fdacn_data_trsm_ready = FNC_ENABLE;
+                            return recv_pkt_return(0x31, sockfd);
+                        default:
+                            ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
+                            break;
+                    }
+                    break;
+                }
+                case 0x68:  // h
+                {
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
+                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 1));
+                    switch (code)
+                    {
+                        case 0x30:
+                        {
+                            https_data_trsm_ready = FNC_DISABLE;
+                            return recv_pkt_return(0x31, sockfd);
+                        }
+                        case 0x31:
+                        {
+                            https_data_trsm_ready = FNC_ENABLE;
+                            return recv_pkt_return(0x31, sockfd);
+                        }
+                        default:
+                        {
+                            ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
             break;
         }
-        // case 0x74:
-        // {
-        //     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
-        //     ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
-        //     switch (code)
-        //     {
-        //         case 0x73:
-        //             https_data_trsm_ready = FNC_ENABLE;
-        //             break;
-        //         case 0x65:
-        //             https_data_trsm_ready = FNC_DISABLE;
-        //             break;
-        //         default:
-        //             break;
-        //     }
-        //     break;
-        // }
         default:
         {
-            // if (vec_byte->len > 8) vec_byte->len = 8;
-            // ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x0F));
-            last_error = FNS_NO_MATCH;
-            return FNS_NO_MATCH;
+            if (vec_byte->len > FDCAN_VEC_BYTE_CAP) vec_byte->len = FDCAN_VEC_BYTE_CAP;
+            ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x0F));
+            ERROR_CHECK_FNS_RETURN(recv_pkt_return(0x32, sockfd));
+            ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
+            break;
         }
     };
-    return FNS_OK;
+    last_error = FNS_NO_MATCH;
+    return FNS_NO_MATCH;
 }
 
 static UNUSED_FNC FnState recv_pkt_proc(size_t count)
@@ -196,7 +244,7 @@ static UNUSED_FNC FnState recv_pkt_proc(size_t count)
     for (size_t i = 0; i < count; i++)
     {
         if (ERROR_CHECK_FNS_RAW(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_byte, &sockfd))) break;
-        recv_pkt_proc0(&vec_byte, sockfd);
+        recv_pkt_proc_inner(&vec_byte, sockfd);
     }
     vec_byte_free(&vec_byte);
     return FNS_OK;
