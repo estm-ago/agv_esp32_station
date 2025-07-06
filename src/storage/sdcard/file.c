@@ -115,7 +115,7 @@ static FnState file_data_get_inner(FILE* file, FileHeader* file_h, uint32_t coun
         ESP_LOGE(TAG, "vec_byte not enough cap");
         return err;
     }
-    uint32_t head_byte = file_h->head * file_h->type;
+    uint32_t head_byte = ((file_h->head + file_h->count - count) % file_h->cap) * file_h->type;
     uint32_t cap_bytes = file_h->cap * file_h->type;
     if (fseek(file, FILE_HEADER_LEN + head_byte, SEEK_SET) != 0)
     {

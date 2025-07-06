@@ -4,6 +4,8 @@
 #include "connectivity/wifi/https/trcv_buffer.h"
 #include "connectivity/cmds.h"
 #include "connectivity/fdcan/main.h"
+#include "storage/main.h"
+#include "storage/sdcard/main.h"
 
 static const char *TAG = "user_https_main";
 httpd_handle_t https_server = NULL;
@@ -99,7 +101,7 @@ const httpd_uri_t ws = {
         .handle_ws_control_frames = true
 };
 
-static UNUSED_FNC FnState pkt_transmit(void)
+static FnState pkt_transmit(void)
 {
     vec_rm_all(&https_trsm_buf);
     int sockfd;
@@ -115,7 +117,7 @@ static UNUSED_FNC FnState pkt_transmit(void)
     return FNS_OK;
 }
 
-static UNUSED_FNC FnState trsm_pkt_proc(void)
+static FnState trsm_pkt_proc(void)
 {
     VecByte vec_byte;
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, HTTPS_TRSM_VEC_MAX));
@@ -132,13 +134,20 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
     return FNS_OK;
 }
 
-static FnState recv_pkt_return(uint8_t code, int sockfd)
+static FnState recv_pkt_return(VecByte* vec_byte, uint8_t code, int sockfd)
 {
-    VecByte vec_byte;
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, 2));
-    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&vec_byte, code));
-    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&vec_byte, '\n'));
-    ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, sockfd));
+    ERROR_CHECK_FNS_RETURN(vec_byte_new(vec_byte, 2));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, code));
+    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, '\n'));
+    ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
+    return FNS_OK;
+}
+
+static FnState recv_pkt_file_return(FileData* file_data, VecByte* vec_byte, int sockfd)
+{
+    ERROR_CHECK_FNS_RETURN(vec_byte_new(vec_byte, STORAGE_GET_DATA * file_data->type));
+    ERROR_CHECK_FNS_RETURN(file_data_get(file_data->path, STORAGE_GET_DATA, vec_byte));
+    ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
     return FNS_OK;
 }
 
@@ -151,21 +160,53 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
     {
         case CMD_B0_DATA:
         {
+            ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
+            switch (code)
+            {
+                case CMD_B1_LEFT_SPEED:
+                {
+                    VecByte vec_data;
+                    FnState err = recv_pkt_file_return(&stg_m_left_speed, &vec_data, sockfd);
+                    vec_byte_free(&vec_data);
+                    return err;
+                }
+                case CMD_B1_RIGHT_SPEED:
+                {
+                    VecByte vec_data;
+                    FnState err = recv_pkt_file_return(&stg_m_right_speed, &vec_data, sockfd);
+                    vec_byte_free(&vec_data);
+                    return err;
+                }
 
+                case CMD_B1_LEFT_DUTY:
+                {
+                    VecByte vec_data;
+                    FnState err = recv_pkt_file_return(&stg_m_left_duty, &vec_data, sockfd);
+                    vec_byte_free(&vec_data);
+                    return err;
+                }
+                case CMD_B1_RIGHT_DUTY:
+                {
+                    VecByte vec_data;
+                    FnState err = recv_pkt_file_return(&stg_m_right_duty, &vec_data, sockfd);
+                    vec_byte_free(&vec_data);
+                    return err;
+                }
+                default: break;
+            }
+            break;
         }
         case CMD_B0_VECH_CONTROL:
         {
-            if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22));
             vec_rm_all(vec_byte);
-            return recv_pkt_return(0x31, sockfd);
+            return recv_pkt_return(vec_byte, 0x31, sockfd);
         }
         case CMD_B0_ARM_CONTROL:
         {
-            if (vec_byte->len > FDCAN_VEC_BYTE_CAP) return FNS_NO_MATCH;
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32));
             vec_rm_all(vec_byte);
-            return recv_pkt_return(0x31, sockfd);
+            return recv_pkt_return(vec_byte, 0x31, sockfd);
         }
         case 0x74:  // t
         {
@@ -182,13 +223,11 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
                     {
                         case 0x30:  // 0
                             fdacn_data_trsm_ready = FNC_DISABLE;
-                            return recv_pkt_return(0x31, sockfd);
+                            return recv_pkt_return(vec_byte, 0x31, sockfd);
                         case 0x31:  // 1
                             fdacn_data_trsm_ready = FNC_ENABLE;
-                            return recv_pkt_return(0x31, sockfd);
-                        default:
-                            ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
-                            break;
+                            return recv_pkt_return(vec_byte, 0x31, sockfd);
+                        default: break;
                     }
                     break;
                 }
@@ -201,25 +240,18 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
                         case 0x30:
                         {
                             https_data_trsm_ready = FNC_DISABLE;
-                            return recv_pkt_return(0x31, sockfd);
+                            return recv_pkt_return(vec_byte, 0x31, sockfd);
                         }
                         case 0x31:
                         {
                             https_data_trsm_ready = FNC_ENABLE;
-                            return recv_pkt_return(0x31, sockfd);
+                            return recv_pkt_return(vec_byte, 0x31, sockfd);
                         }
-                        default:
-                        {
-                            ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
-                            break;
-                        }
+                        default: break;
                     }
                     break;
                 }
-                default:
-                {
-                    break;
-                }
+                default: break;
             }
             break;
         }
@@ -227,16 +259,16 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
         {
             if (vec_byte->len > FDCAN_VEC_BYTE_CAP) vec_byte->len = FDCAN_VEC_BYTE_CAP;
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x0F));
-            ERROR_CHECK_FNS_RETURN(recv_pkt_return(0x32, sockfd));
-            ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
+            ERROR_CHECK_FNS_RETURN(recv_pkt_return(vec_byte, 0x32, sockfd));
             break;
         }
     };
+    ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
     last_error = FNS_NO_MATCH;
     return FNS_NO_MATCH;
 }
 
-static UNUSED_FNC FnState recv_pkt_proc(size_t count)
+static FnState recv_pkt_proc(size_t count)
 {
     VecByte vec_byte;
     int sockfd;
@@ -272,7 +304,7 @@ static UNUSED_FNC void https_data_task(void *arg)
 FnState https_server_setup(void) {
     https_init();
     https_server_start();
-    xTaskCreate(https_data_task, "https_data_task", 4096, NULL, HTTPS_DATA_TASK_PRIO_SEQU, NULL);
+    xTaskCreate(https_data_task, "https_data_task", 6144, NULL, HTTPS_DATA_TASK_PRIO_SEQU, NULL);
 
     // wss_server_send_messages(&https_server);
     return FNS_OK;
