@@ -5,7 +5,6 @@
 #include "connectivity/cmds.h"
 #include "connectivity/fdcan/main.h"
 #include "storage/main.h"
-#include "storage/sdcard/main.h"
 
 static const char *TAG = "user_https_main";
 httpd_handle_t https_server = NULL;
@@ -146,6 +145,7 @@ static FnState recv_pkt_return(VecByte* vec_byte, uint8_t code, int sockfd)
 static FnState recv_pkt_file_return(FileData* file_data, VecByte* vec_byte, int sockfd)
 {
     ERROR_CHECK_FNS_RETURN(vec_byte_new(vec_byte, STORAGE_GET_DATA * file_data->type));
+    ERROR_CHECK_FNS_RETURN(store_data(file_data));
     ERROR_CHECK_FNS_RETURN(file_data_get(file_data->path, STORAGE_GET_DATA, vec_byte));
     ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
     return FNS_OK;

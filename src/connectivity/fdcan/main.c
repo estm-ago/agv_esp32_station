@@ -80,7 +80,7 @@ static UNUSED_FNC void fdcan_recv_task(void *arg)
     }
 }
 
-static UNUSED_FNC FnState pkt_transmit(void)
+static FnState pkt_transmit(void)
 {
     vec_rm_all(&fdcan_trsm_buf);
     ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_pop(&fdcan_trsm_pkt_buf, &fdcan_trsm_buf, &fdcan_trsm_msg.identifier));
@@ -99,7 +99,7 @@ static UNUSED_FNC FnState pkt_transmit(void)
     return FNS_OK;
 }
 
-static UNUSED_FNC FnState trsm_pkt_proc(void)
+static FnState trsm_pkt_proc(void)
 {
     VecByte vec_byte;
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, 8));
@@ -114,49 +114,43 @@ static UNUSED_FNC FnState trsm_pkt_proc(void)
     return FNS_OK;
 }
 
-static UNUSED_FNC FnState recv_pkt_proc_inner(VecByte* vec_byte)
+static FnState recv_pkt_proc_inner(VecByte* vec_byte)
 {
     uint8_t code;
     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
-    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 1));
     switch (code)
     {
         case CMD_B0_DATA:
         {
-            ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
-            ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 1));
+            ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
             switch (code)
             {
                 case CMD_B1_LEFT_SPEED:
                 {
-                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
                     uint32_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 0, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 2, &value));
                     // Todo vec_byte_check_len(vec_byte, 0);
                     vec_byte_push_u32(&stg_m_left_speed.buffer, value);
                     break;
                 }
                 case CMD_B1_RIGHT_SPEED:
                 {
-                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
                     uint32_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 0, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 2, &value));
                     vec_byte_push_u32(&stg_m_right_speed.buffer, value);
                     break;
                 }
                 case CMD_B1_LEFT_DUTY:
                 {
-                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 0, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 2, &value));
                     vec_byte_push_byte(&stg_m_left_duty.buffer, value);
                     break;
                 }
                 case CMD_B1_RIGHT_DUTY:
                 {
-                    ERROR_CHECK_FNS_RETURN(vec_rm_range(vec_byte, 0, 2));
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 0, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 2, &value));
                     vec_byte_push_byte(&stg_m_right_duty.buffer, value);
                     break;
                 }
@@ -177,7 +171,7 @@ static UNUSED_FNC FnState recv_pkt_proc_inner(VecByte* vec_byte)
     return FNS_OK;
 }
 
-static UNUSED_FNC FnState recv_pkt_proc(size_t count)
+static FnState recv_pkt_proc(size_t count)
 {
     VecByte vec_byte;
     uint32_t id;
@@ -185,7 +179,7 @@ static UNUSED_FNC FnState recv_pkt_proc(size_t count)
     for (size_t i = 0; i < count; i++)
     {
         if (ERROR_CHECK_FNS_RAW(fdcan_trcv_buf_pop(&fdcan_recv_pkt_buf, &vec_byte, &id))) break;
-        recv_pkt_proc_inner(&vec_byte);
+        last_error = recv_pkt_proc_inner(&vec_byte);
 
         // https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, (int)vec_byte.data[0]);
     }
@@ -198,12 +192,12 @@ static UNUSED_FNC void fdcan_data_task(void *arg)
     size_t tick = 0;
     while (1)
     {
-        pkt_transmit();
-        recv_pkt_proc(5);
+        last_error = pkt_transmit();
+        last_error = recv_pkt_proc(5);
         if (tick % 100 == 0)
         {
             tick = 0;
-            trsm_pkt_proc();
+            last_error = trsm_pkt_proc();
         }
         vTaskDelay(pdMS_TO_TICKS(10));
         tick++;
