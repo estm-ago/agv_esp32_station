@@ -12,6 +12,7 @@ idf_component_register(
         esp_https_server
         esp_timer
         esp_eth
+        bt
         fatfs
         sdmmc
     EMBED_TXTFILES 

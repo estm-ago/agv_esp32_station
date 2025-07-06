@@ -120,12 +120,12 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte)
     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
     switch (code)
     {
-        case CMD_B0_DATA:
+        case CMD_DATA_B0:
         {
             ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
             switch (code)
             {
-                case CMD_B1_LEFT_SPEED:
+                case CMD_DATA_B1_LEFT_SPEED:
                 {
                     uint32_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 2, &value));
@@ -133,21 +133,21 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte)
                     vec_byte_push_u32(&stg_m_left_speed.buffer, value);
                     break;
                 }
-                case CMD_B1_RIGHT_SPEED:
+                case CMD_DATA_B1_RIGHT_SPEED:
                 {
                     uint32_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 2, &value));
                     vec_byte_push_u32(&stg_m_right_speed.buffer, value);
                     break;
                 }
-                case CMD_B1_LEFT_DUTY:
+                case CMD_DATA_B1_LEFT_DUTY:
                 {
                     uint8_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 2, &value));
                     vec_byte_push_byte(&stg_m_left_duty.buffer, value);
                     break;
                 }
-                case CMD_B1_RIGHT_DUTY:
+                case CMD_DATA_B1_RIGHT_DUTY:
                 {
                     uint8_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 2, &value));

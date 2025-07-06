@@ -66,7 +66,7 @@ static FnState uart_tr_pkt_proc(void)
 {
     VecByte vec_byte;
     ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
-    ERROR_CHECK_FNS_WRI_PUSH(vec_byte_push_byte(&vec_byte, CMD_B0_DATA_START),
+    ERROR_CHECK_FNS_WRI_PUSH(vec_byte_push_byte(&vec_byte, CMD_DATA_B0_START),
         connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
     vec_byte_free(&vec_byte);
     return FNS_OK;
@@ -90,7 +90,7 @@ static FnState uart_re_pkt_proc(size_t count)
         vec_rm_range(&vec_byte, 0, 1);
         switch (code)
         {
-            case CMD_B0_DATA:
+            case CMD_DATA_B0:
                 break;
             default:
                 break;

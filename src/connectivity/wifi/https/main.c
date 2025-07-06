@@ -158,19 +158,19 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
     ESP_LOGI(TAG, "recv_pkt_proc_inner: %02X", code);
     switch (code)
     {
-        case CMD_B0_DATA:
+        case CMD_DATA_B0:
         {
             ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
             switch (code)
             {
-                case CMD_B1_LEFT_SPEED:
+                case CMD_DATA_B1_LEFT_SPEED:
                 {
                     VecByte vec_data;
                     FnState err = recv_pkt_file_return(&stg_m_left_speed, &vec_data, sockfd);
                     vec_byte_free(&vec_data);
                     return err;
                 }
-                case CMD_B1_RIGHT_SPEED:
+                case CMD_DATA_B1_RIGHT_SPEED:
                 {
                     VecByte vec_data;
                     FnState err = recv_pkt_file_return(&stg_m_right_speed, &vec_data, sockfd);
@@ -178,14 +178,14 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
                     return err;
                 }
 
-                case CMD_B1_LEFT_DUTY:
+                case CMD_DATA_B1_LEFT_DUTY:
                 {
                     VecByte vec_data;
                     FnState err = recv_pkt_file_return(&stg_m_left_duty, &vec_data, sockfd);
                     vec_byte_free(&vec_data);
                     return err;
                 }
-                case CMD_B1_RIGHT_DUTY:
+                case CMD_DATA_B1_RIGHT_DUTY:
                 {
                     VecByte vec_data;
                     FnState err = recv_pkt_file_return(&stg_m_right_duty, &vec_data, sockfd);
@@ -196,13 +196,13 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
             }
             break;
         }
-        case CMD_B0_VECH_CONTROL:
+        case CMD_VECH_B0_CONTROL:
         {
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22));
             vec_rm_all(vec_byte);
             return recv_pkt_return(vec_byte, 0x31, sockfd);
         }
-        case CMD_B0_ARM_CONTROL:
+        case CMD_ARM_B0_CONTROL:
         {
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32));
             vec_rm_all(vec_byte);
