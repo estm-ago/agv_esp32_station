@@ -93,7 +93,7 @@ FnState vec_byte_starts_with(const VecByte* self, const uint8_t *pre, size_t pre
  * @param len 增加的長度
  * 
  * @return FNS_OK 成功推入
- * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
+ * @return FNS_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_add_len(VecByte* self, size_t len);
 /**
@@ -104,7 +104,7 @@ FnState vec_byte_add_len(VecByte* self, size_t len);
  * @param src_len 要推入的資料長度
  * 
  * @return FNS_OK 成功推入
- * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
+ * @return FNS_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push(VecByte* self, const void *src, size_t src_len);
 /**
@@ -114,7 +114,7 @@ FnState vec_byte_push(VecByte* self, const void *src, size_t src_len);
  * @param value 要推入的原始值
  * 
  * @return FNS_OK 成功推入
- * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
+ * @return FNS_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push_byte(VecByte* self, uint8_t value);
 /**
@@ -132,7 +132,7 @@ uint16_t swap_u16(const uint16_t value);
  * @param value 要推入的原始值
  * 
  * @return FNS_OK 成功推入
- * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
+ * @return FNS_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push_u16(VecByte* self, uint16_t value);
 /**
@@ -174,7 +174,7 @@ FnState vec_byte_pop_u32(VecByte* self, size_t id, uint32_t* value);
  * @param value 要推入的原始值
  * 
  * @return FNS_OK 成功推入
- * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
+ * @return FNS_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push_u32(VecByte* self, uint32_t value);
 /**
@@ -184,6 +184,6 @@ FnState vec_byte_push_u32(VecByte* self, uint32_t value);
  * @param value 要推入的原始值
  * 
  * @return FNS_OK 成功推入
- * @return FNS_BUF_OVERFLOW 推入失敗（超過容量）
+ * @return FNS_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push_f32(VecByte* self, float value);

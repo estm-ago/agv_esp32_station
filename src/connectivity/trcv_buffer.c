@@ -18,7 +18,7 @@ FnState connect_trcv_buf_setup(ByteTrcvBuf* self, size_t buf_size, size_t data_s
 
 FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte)
 {
-    if (self->len >= self->cap) return FNS_BUF_OVERFLOW;
+    if (self->len >= self->cap) return FNS_OVERFLOW;
     size_t tail = (self->head + self->len) % self->cap;
     vec_rm_all(&self->vecs[tail]);
     vec_byte_realign(vec_byte);

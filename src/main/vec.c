@@ -97,7 +97,7 @@ FnState vec_byte_starts_with(const VecByte* self, const uint8_t *pre, size_t pre
 FnState vec_byte_add_len(VecByte* self, size_t len)
 {
     if (self->data == NULL) return FNS_ERR_OOM;
-    if (len > self->cap) return FNS_BUF_OVERFLOW;
+    if (len > self->cap) return FNS_OVERFLOW;
     self->len += len;
     return FNS_OK;
 }
@@ -105,7 +105,7 @@ FnState vec_byte_add_len(VecByte* self, size_t len)
 FnState vec_byte_push(VecByte* self, const void *src, size_t src_len)
 {
     if (self->data == NULL) return FNS_ERR_OOM;
-    if (self->len + src_len > self->cap) return FNS_BUF_OVERFLOW;
+    if (self->len + src_len > self->cap) return FNS_OVERFLOW;
     size_t tail = self->head + self->len;
     if (
            (tail >= self->cap)

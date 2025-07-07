@@ -14,7 +14,7 @@ extern FnState last_error;
 #define FNS_TIMEOUT         2
 #define FNS_BUF_EMPTY       3
 #define FNS_BUF_NOT_ENOU    4
-#define FNS_BUF_OVERFLOW    5
+#define FNS_OVERFLOW        5
 #define FNS_NO_MATCH        6
 #define FNS_NOT_MOVE        7
 #define FNS_ERR_OOM         8
