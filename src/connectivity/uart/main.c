@@ -34,7 +34,7 @@ static FnState uart_read_t(const char* logName)
     }
     else
     {
-        return FNS_NO_MATCH;
+        return FNS_NOT_FOUND;
     }
 }
 

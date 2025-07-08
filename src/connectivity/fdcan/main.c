@@ -131,44 +131,37 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte)
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 2, &value));
                     // Todo vec_byte_check_len(vec_byte, 0);
                     vec_byte_push_u32(&stg_m_left_speed.buffer, value);
-                    break;
+                    return FNS_OK;
                 }
                 case CMD_DATA_B1_RIGHT_SPEED:
                 {
                     uint32_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_u32(vec_byte, 2, &value));
                     vec_byte_push_u32(&stg_m_right_speed.buffer, value);
-                    break;
+                    return FNS_OK;
                 }
                 case CMD_DATA_B1_LEFT_DUTY:
                 {
                     uint8_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 2, &value));
                     vec_byte_push_byte(&stg_m_left_duty.buffer, value);
-                    break;
+                    return FNS_OK;
                 }
                 case CMD_DATA_B1_RIGHT_DUTY:
                 {
                     uint8_t value;
                     ERROR_CHECK_FNS_RETURN(vec_byte_pop_byte(vec_byte, 2, &value));
                     vec_byte_push_byte(&stg_m_right_duty.buffer, value);
-                    break;
+                    return FNS_OK;
                 }
-                default:
-                {
-                    last_error = FNS_NO_MATCH;
-                    return FNS_NO_MATCH;
-                }
+                default: break;
             }
             break;
         }
-        default:
-        {
-            last_error = FNS_NO_MATCH;
-            return FNS_NO_MATCH;
-        }
+        default: break;
     }
-    return FNS_OK;
+    last_error = FNS_NOT_FOUND;
+    return FNS_NOT_FOUND;
 }
 
 static FnState recv_pkt_proc(size_t count)

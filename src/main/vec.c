@@ -82,15 +82,15 @@ void vec_byte_realign(VecByte* self)
 FnState vec_byte_starts_with(const VecByte* self, const uint8_t *pre, size_t pre_len)
 {
     if (self->data == NULL) return FNS_ERR_OOM;
-    if (self->len < pre_len) return FNS_NO_MATCH;
+    if (self->len < pre_len) return FNS_NOT_FOUND;
     if (
            (self->head + pre_len <= self->cap)
         && (memcmp(self->data + self->head, pre, pre_len) == 0)
     ) return FNS_OK;
     size_t first_part  = self->cap - self->head;
     size_t remaining = pre_len - first_part;
-    if (memcmp(self->data + self->head, pre, first_part) != 0) return FNS_NO_MATCH;
-    if (memcmp(self->data, pre + first_part, remaining) != 0) return FNS_NO_MATCH;
+    if (memcmp(self->data + self->head, pre, first_part) != 0) return FNS_NOT_FOUND;
+    if (memcmp(self->data, pre + first_part, remaining) != 0) return FNS_NOT_FOUND;
     return FNS_OK;
 }
 

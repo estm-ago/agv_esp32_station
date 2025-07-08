@@ -264,8 +264,8 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
         }
     };
     ESP_LOGE(TAG, "recv_pkt_proc_inner: %02X", code);
-    last_error = FNS_NO_MATCH;
-    return FNS_NO_MATCH;
+    last_error = FNS_NOT_FOUND;
+    return FNS_NOT_FOUND;
 }
 
 static FnState recv_pkt_proc(size_t count)

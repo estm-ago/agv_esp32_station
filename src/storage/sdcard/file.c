@@ -73,7 +73,7 @@ static inline FnState file_header_read_inner(VecByte* vec_byte, FILE* file, File
     if (end_check != SD_FILE_HEAD_END)
     {
         ESP_LOGE(TAG, "header end no match");
-        return FNS_NO_MATCH;
+        return FNS_NOT_FOUND;
     }
     return FNS_OK;
 }
