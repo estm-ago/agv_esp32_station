@@ -72,7 +72,7 @@
 //      CMD_RFID_B2_NUMBER                          // DATA號碼 0-3
 
 //      CMD_RFID_B3_BLOCK                           // 區塊選擇 0-2
-//      CMD_RFID_(B3-B6)_DATA                       // 4 byte DATA
+//      CMD_RFID_(B3-B6)_DATA                       // 4 byte DATA0
 
 //      CMD_RFID_B4_CONFIRM                         // 直接送出 0 或 1
 #define CMD_RFID_B4_ONLY_SET        (uint8_t)0x00
