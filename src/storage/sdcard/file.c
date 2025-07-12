@@ -107,7 +107,6 @@ FnState file_new(const char* path, const FileHeader* file_h)
 
 static FnState file_data_get_inner(FILE* file, FileHeader* file_h, uint32_t count, VecByte* vec_byte)
 {
-    vec_rm_all(vec_byte);
     uint32_t read_bytes = count * file_h->type;
     FnState err = vec_byte_add_len(vec_byte, read_bytes);
     if (ERROR_CHECK_FNS_RAW(err))

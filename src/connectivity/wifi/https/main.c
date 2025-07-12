@@ -142,10 +142,12 @@ static FnState recv_pkt_return(VecByte* vec_byte, uint8_t code, int sockfd)
     return FNS_OK;
 }
 
-static FnState recv_pkt_file_return(FileData* file_data, VecByte* vec_byte, int sockfd)
+static FnState recv_pkt_file_return(FileData* file_data, VecByte* vec_byte, VecByte* in_byte, int sockfd)
 {
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(vec_byte, STORAGE_GET_DATA * file_data->type));
-    ERROR_CHECK_FNS_RETURN(store_data(file_data));
+    ERROR_CHECK_FNS_RETURN(vec_byte_new(vec_byte, STORAGE_GET_DATA * file_data->type + 2));
+    // ERROR_CHECK_FNS_RETURN(store_data(file_data));
+    vec_byte_realign(in_byte);
+    ERROR_CHECK_FNS_RETURN(vec_byte_push(vec_byte, in_byte->data, 2));
     ERROR_CHECK_FNS_RETURN(file_data_get(file_data->path, STORAGE_GET_DATA, vec_byte));
     ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
     return FNS_OK;
@@ -166,29 +168,28 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
                 case CMD_DATA_B1_LEFT_SPEED:
                 {
                     VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_left_speed, &vec_data, sockfd);
+                    FnState err = recv_pkt_file_return(&stg_m_left_speed, &vec_data, vec_byte, sockfd);
                     vec_byte_free(&vec_data);
                     return err;
                 }
                 case CMD_DATA_B1_RIGHT_SPEED:
                 {
                     VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_right_speed, &vec_data, sockfd);
+                    FnState err = recv_pkt_file_return(&stg_m_right_speed, &vec_data, vec_byte, sockfd);
                     vec_byte_free(&vec_data);
                     return err;
                 }
-
                 case CMD_DATA_B1_LEFT_DUTY:
                 {
                     VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_left_duty, &vec_data, sockfd);
+                    FnState err = recv_pkt_file_return(&stg_m_left_duty, &vec_data, vec_byte, sockfd);
                     vec_byte_free(&vec_data);
                     return err;
                 }
                 case CMD_DATA_B1_RIGHT_DUTY:
                 {
                     VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_right_duty, &vec_data, sockfd);
+                    FnState err = recv_pkt_file_return(&stg_m_right_duty, &vec_data, vec_byte, sockfd);
                     vec_byte_free(&vec_data);
                     return err;
                 }
@@ -196,7 +197,7 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
             }
             break;
         }
-        case CMD_VECH_B0_CONTROL:
+        case CMD_VEHI_B0_CONTROL:
         {
             ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22));
             vec_rm_all(vec_byte);
