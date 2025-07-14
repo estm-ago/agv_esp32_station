@@ -160,7 +160,7 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
     ESP_LOGI(TAG, "recv_pkt_proc_inner: %02X", code);
     switch (code)
     {
-        case CMD_DATA_B0:
+        case CMD_DATA_B0_CONTROL:
         {
             ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
             switch (code)

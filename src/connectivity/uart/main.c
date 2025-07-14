@@ -90,10 +90,7 @@ static FnState uart_re_pkt_proc(size_t count)
         vec_rm_range(&vec_byte, 0, 1);
         switch (code)
         {
-            case CMD_DATA_B0:
-                break;
-            default:
-                break;
+            default: break;
         }
     }
     vec_byte_free(&vec_byte);
