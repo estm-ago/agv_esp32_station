@@ -100,7 +100,7 @@ static esp_err_t https_server_start_inner(void)
     wss_keep_alive_t keep_alive = wss_keep_alive_start(&keep_alive_config);
 
     // Start the httpd server
-    ESP_LOGI(TAG, "Starting server");
+    // ESP_LOGI(TAG, "Starting server");
 
     // httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
     // conf.httpd.task_priority = HTTPS_TASK_PRIO_SEQU;
