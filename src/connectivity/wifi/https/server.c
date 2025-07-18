@@ -28,7 +28,7 @@ static bool client_not_alive_cb(wss_keep_alive_t alive_handle, int sockfd)
  */
 static void send_ping(void *arg)
 {
-    async_resp_arg* resp_arg = (async_resp_arg*) arg;
+    async_resp_arg *resp_arg = (async_resp_arg *)arg;
     httpd_ws_frame_t ws_pkt = {
         .len = 0,
         .type = HTTPD_WS_TYPE_PING,
@@ -64,7 +64,8 @@ static bool check_client_alive_cb(wss_keep_alive_t alive_handle, int sockfd)
  * @param sockfd 客戶端 socket 檔案描述符
  * @return esp_err_t, ESP_OK 表示加入成功
  */
-static esp_err_t client_connect(httpd_handle_t httpd_handle, int sockfd) {
+static esp_err_t client_connect(httpd_handle_t httpd_handle, int sockfd)
+{
     ESP_LOGI(TAG, "New client connected %d", sockfd);
     wss_keep_alive_t h = httpd_get_global_user_ctx(httpd_handle);
     return wss_keep_alive_add_client(h, sockfd);
@@ -75,7 +76,8 @@ static esp_err_t client_connect(httpd_handle_t httpd_handle, int sockfd) {
  * @param httpd_handle HTTPD server handle
  * @param sockfd 客戶端 socket 描述符
  */
-static void client_disconnect(httpd_handle_t httpd_handle, int sockfd) {
+static void client_disconnect(httpd_handle_t httpd_handle, int sockfd)
+{
     ESP_LOGI(TAG, "Client disconnected %d", sockfd);
     wss_keep_alive_t h = httpd_get_global_user_ctx(httpd_handle);
     wss_keep_alive_remove_client(h, sockfd);
@@ -88,7 +90,8 @@ static void client_disconnect(httpd_handle_t httpd_handle, int sockfd) {
  */
 static esp_err_t https_server_start_inner(void)
 {
-    if (https_server != NULL) return ESP_ERR_INVALID_STATE;
+    if (https_server != NULL)
+        return ESP_ERR_INVALID_STATE;
     // Prepare keep-alive engine
     wss_keep_alive_config_t keep_alive_config = KEEP_ALIVE_CONFIG_DEFAULT();
     keep_alive_config.max_clients = max_clients;
@@ -99,27 +102,44 @@ static esp_err_t https_server_start_inner(void)
     // Start the httpd server
     ESP_LOGI(TAG, "Starting server");
 
-    httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
-    conf.httpd.task_priority = HTTPS_TASK_PRIO_SEQU;
-    conf.httpd.max_open_sockets = max_clients;
-    conf.httpd.global_user_ctx = keep_alive;
-    conf.httpd.open_fn = client_connect;
-    conf.httpd.close_fn = client_disconnect;
+    // httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
+    // conf.httpd.task_priority = HTTPS_TASK_PRIO_SEQU;
+    // conf.httpd.max_open_sockets = max_clients;
+    // conf.httpd.global_user_ctx = keep_alive;
+    // conf.httpd.open_fn = client_connect;
+    // conf.httpd.close_fn = client_disconnect;
 
-    extern const unsigned char servercert_start[] asm("_binary_servercert_pem_start");
-    extern const unsigned char servercert_end[]   asm("_binary_servercert_pem_end");
-    conf.servercert = servercert_start;
-    conf.servercert_len = servercert_end - servercert_start;
+    // extern const unsigned char servercert_start[] asm("_binary_servercert_pem_start");
+    // extern const unsigned char servercert_end[]   asm("_binary_servercert_pem_end");
+    // conf.servercert = servercert_start;
+    // conf.servercert_len = servercert_end - servercert_start;
 
-    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
-    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
-    conf.prvtkey_pem = prvtkey_pem_start;
-    conf.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
+    // extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
+    // extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
+    // conf.prvtkey_pem = prvtkey_pem_start;
+    // conf.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
 
-    if (httpd_ssl_start(&https_server, &conf) != ESP_OK)
+    // if (httpd_ssl_start(&https_server, &conf) != ESP_OK)
+    // {
+    //     ESP_LOGI(TAG, "Error starting server!");
+    //     return ESP_FAIL;
+    // }
+    ESP_LOGI(TAG, "Starting HTTP server");
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.server_port = 80;
+    config.ctrl_port = 0;
+    config.max_open_sockets = max_clients;
+    config.global_user_ctx = keep_alive;
+    config.open_fn = client_connect;
+    config.close_fn = client_disconnect;
+
+    // 3. 啟動非 SSL 伺服器
+    esp_err_t ret = httpd_start(&https_server, &config);
+    if (ret != ESP_OK)
     {
-        ESP_LOGI(TAG, "Error starting server!");
-        return ESP_FAIL;
+        ESP_LOGE(TAG, "Error starting HTTP server: %s", esp_err_to_name(ret));
+        wss_keep_alive_stop(keep_alive);
+        return ret;
     }
 
     // Set URI handlers
@@ -134,8 +154,10 @@ static esp_err_t https_server_start_inner(void)
  * @brief 停止內部 HTTPS server，並關閉 keep-alive 引擎
  * @return esp_err_t, ESP_OK 表示停止成功，ESP_ERR_INVALID_STATE 表示未啟動
  */
-static esp_err_t https_server_stop_inner(void) {
-    if (https_server == NULL) return ESP_ERR_INVALID_STATE;
+static esp_err_t https_server_stop_inner(void)
+{
+    if (https_server == NULL)
+        return ESP_ERR_INVALID_STATE;
     wss_keep_alive_stop(httpd_get_global_user_ctx(https_server));
 
     return httpd_ssl_stop(https_server);
@@ -148,9 +170,9 @@ static esp_err_t https_server_stop_inner(void) {
  * @param event_id 事件 ID
  * @param event_data 事件資料
  */
-static void wifi_connect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
+static void wifi_connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-    httpd_handle_t* server = (httpd_handle_t*) arg;
+    httpd_handle_t *server = (httpd_handle_t *)arg;
     if (*server == NULL)
     {
         https_server_start_inner();
@@ -165,16 +187,19 @@ static void wifi_connect_handler(void* arg, esp_event_base_t event_base, int32_t
  * @param event_id 事件 ID
  * @param event_data 事件資料
  */
-static void wifi_disconnect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
+static void wifi_disconnect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-    httpd_handle_t* server = (httpd_handle_t*) arg;
+    httpd_handle_t *server = (httpd_handle_t *)arg;
     if (*server == NULL)
     {
         return;
     }
-    if (https_server_stop_inner() == ESP_OK) {
+    if (https_server_stop_inner() == ESP_OK)
+    {
         *server = NULL;
-    } else {
+    }
+    else
+    {
         ESP_LOGE(TAG, "Failed to stop https server");
     }
 }
@@ -186,7 +211,8 @@ static void wifi_disconnect_handler(void* arg, esp_event_base_t event_base, int3
 esp_err_t https_server_start(void)
 {
     esp_err_t result = https_server_start_inner();
-    if (result != ESP_OK) return result;
+    if (result != ESP_OK)
+        return result;
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_connect_handler, &https_server));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &wifi_disconnect_handler, &https_server));
     return ESP_OK;
