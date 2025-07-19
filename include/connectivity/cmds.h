@@ -74,6 +74,7 @@
 
 #define CMD_ARM_B2_STOP             (uint8_t)0x00   // 停止
 #define CMD_ARM_B2_SET              (uint8_t)0x01   // 方位設定
+#define CMD_ARM_B2_IDLE             (uint8_t)0x00   // 待機位置
 
 //      CMD_ARM_B3_VALUE                            // 方位值0-100
 

@@ -1,15 +1,10 @@
+#include "connectivity/wifi/main.h"
 #include <arpa/inet.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/event_groups.h>
-#include <esp_system.h>
 #include <esp_wifi.h>
-#include <esp_event.h>
-#include <esp_log.h>
 #include <nvs_flash.h>
 #include <esp_netif.h>
 #include <lwip/sockets.h>
 #include "main/config.h"
-#include "connectivity/wifi/main.h"
 
 #define WIFI_CONNECTED_BIT      BIT0
 #define WIFI_FAIL_BIT           BIT1
@@ -95,9 +90,9 @@ void wifi_setup_sta(void)
     esp_netif_t* sta_netif = esp_netif_create_default_wifi_sta();
     ESP_ERROR_CHECK(esp_netif_dhcpc_stop(sta_netif));
     esp_netif_ip_info_t ip_info;
-    inet_pton(AF_INET, WIFI_DHCP, &ip_info.ip);
-    inet_pton(AF_INET, "255.255.255.0", &ip_info.netmask);
-    inet_pton(AF_INET, "192.168.0.1", &ip_info.gw);
+    inet_pton(AF_INET, WIFI_STATIC, &ip_info.ip);
+    inet_pton(AF_INET, WIFI_NETMASK, &ip_info.netmask);
+    inet_pton(AF_INET, WIFI_GW, &ip_info.gw);
     ESP_ERROR_CHECK(esp_netif_set_ip_info(sta_netif, &ip_info));
 
     // Initialize Wi-Fi driver

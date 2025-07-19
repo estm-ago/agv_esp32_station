@@ -30,6 +30,7 @@ FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte)
 FnState connect_trcv_buf_pop(ByteTrcvBuf* self, VecByte* vec_byte)
 {
     if (self->len == 0) return FNS_BUF_EMPTY;
+    vec_rm_all(vec_byte);
     ERROR_CHECK_FNS_RETURN(vec_byte_push(vec_byte, self->vecs[self->head].data, self->vecs[self->head].len));
     if (--self->len == 0)
     {

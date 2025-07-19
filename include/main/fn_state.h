@@ -6,6 +6,59 @@
 
 #include "main/config.h"
 
+typedef struct SuccessResult {
+    void* obj;
+} SuccessResult;
+
+typedef enum ErrorType {
+    RES_ERR_INVALID = -1,
+    RES_ERR_FAIL,
+    RES_ERR_MEMORY_ERROR,
+    RES_ERR_BUSY,
+    RES_ERR_TIMEOUT,
+    RES_ERR_EMPTY,
+    RES_ERR_FULL,
+    RES_ERR_OVERFLOW,
+    RES_ERR_NOT_FOUND,
+    RES_ERR_NOT_MOVE,
+    RES_ERR_REMOVE_FAIL,
+} ErrorType;
+
+typedef struct Result {
+    bool is_ok;
+    union {
+        SuccessResult success;
+        ErrorType error;
+    } result;
+} Result;
+
+#define RESULT_OK(_obj_) ((Result){.is_ok = true, .result.success = {.obj = (_obj_)}})
+
+#define RESULT_ERROR(_err_) ((Result){.is_ok = false, .result.error = (_err_)})
+
+#define RESULT_BOOL(_cond_) ((_cond_) ? RESULT_OK(NULL) : RESULT_ERROR(False))
+
+#define CHECK_RESULT(res)           \
+    do {                            \
+        if (!(res).is_ok)           \
+        {                           \
+            return EXIT_FAILURE;    \
+        }                           \
+    } while (0)
+
+#define CHECK_RES_CLEANUP(res)      \
+    do {                            \
+        ret = (res);                \
+        if (!ret.is_ok)             \
+            goto cleanup;           \
+    } while (0)
+
+#define UNWRAP_RESULT(res)          \
+    ({                              \
+        CHECK_RESULT(res);          \
+        (res).result.success.obj;   \
+    })
+
 typedef uint8_t FnState;
 extern FnState last_error;
 #define FNS_INVALID         0xFF
@@ -32,6 +85,13 @@ extern FnState last_error;
         }                               \
     } while (0)
 
+#define ERROR_CHECK_FNS_CLEANUP(expr)   \
+    do {                                \
+        result = (expr);                \
+        if (result != FNS_OK)           \
+            goto cleanup;               \
+    } while (0)
+    
 #define ERROR_CHECK_FNS_VOID(expr)  \
     do {                            \
         FnState _err = (expr);      \
@@ -52,6 +112,7 @@ extern FnState last_error;
         }                               \
     } while (0)
 
+#ifdef AGV_STM32_DEVICE
 #define ERROR_CHECK_HAL_RETERN(expr)        \
     do {                                    \
         HAL_StatusTypeDef _err = (expr);    \
@@ -69,6 +130,7 @@ extern FnState last_error;
             Error_Handler();                \
         }                                   \
     } while (0)
+#endif
 
 #ifdef AGV_ESP32_DEVICE
 
@@ -81,14 +143,8 @@ void Error_Handler(void);
 
 typedef struct FnState_h
 {
-    FnState vehicle_test_no_load_rps;
-    FnState vehicle_over_hall_fall_back;
+    FnState vehicle_rotate_in_place;
     FnState agv_forward_leave_strong_magnet;
-    FnState vehicle_search_magnetic_path;
-    FnState vehicle_ensure_stop;
-    FnState vehicle2_renew_vehicle_rotation_status;
-    FnState rotate_in_place__map_data_current_count;
-    FnState breakdown_all_hall_lost__path_not_found;
 } FnState_h;
 extern FnState_h error_state;
 void timeout_error(uint32_t start_time, FnState *error_parameter);

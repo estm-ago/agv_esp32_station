@@ -133,24 +133,19 @@ static FnState trsm_pkt_proc(void)
     return FNS_OK;
 }
 
-static FnState recv_pkt_return(VecByte* vec_byte, uint8_t code, int sockfd)
+static FnState recv_pkt_proc_file(FileData* file_data, VecByte* in_byte, int sockfd)
 {
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(vec_byte, 2));
-    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, code));
-    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(vec_byte, '\n'));
-    ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
-    return FNS_OK;
-}
-
-static FnState recv_pkt_file_return(FileData* file_data, VecByte* vec_byte, VecByte* in_byte, int sockfd)
-{
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(vec_byte, STORAGE_GET_DATA * file_data->type + 2));
-    // ERROR_CHECK_FNS_RETURN(store_data(file_data));
+    FnState result;
+    VecByte vec_byte;
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_new(&vec_byte, STORAGE_GET_DATA * file_data->type + 2));
+    // ERROR_CHECK_FNS_CLEANUP(storage_store_data(file_data));
     vec_byte_realign(in_byte);
-    ERROR_CHECK_FNS_RETURN(vec_byte_push(vec_byte, in_byte->data, 2));
-    ERROR_CHECK_FNS_RETURN(file_data_get(file_data->path, STORAGE_GET_DATA, vec_byte));
-    ERROR_CHECK_FNS_RETURN(https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, sockfd));
-    return FNS_OK;
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_push(&vec_byte, in_byte->data, 2));
+    ERROR_CHECK_FNS_CLEANUP(file_data_get(file_data->path, STORAGE_GET_DATA, &vec_byte));
+    ERROR_CHECK_FNS_CLEANUP(https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, sockfd));
+    cleanup:
+    vec_byte_free(&vec_byte);
+    return result;
 }
 
 static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
@@ -167,31 +162,19 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
             {
                 case CMD_DATA_B1_LEFT_SPEED:
                 {
-                    VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_left_speed, &vec_data, vec_byte, sockfd);
-                    vec_byte_free(&vec_data);
-                    return err;
+                    return recv_pkt_proc_file(&stg_wheel_left_speed, vec_byte, sockfd);
                 }
                 case CMD_DATA_B1_RIGHT_SPEED:
                 {
-                    VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_right_speed, &vec_data, vec_byte, sockfd);
-                    vec_byte_free(&vec_data);
-                    return err;
+                    return recv_pkt_proc_file(&stg_wheel_right_speed, vec_byte, sockfd);
                 }
                 case CMD_DATA_B1_LEFT_DUTY:
                 {
-                    VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_left_duty, &vec_data, vec_byte, sockfd);
-                    vec_byte_free(&vec_data);
-                    return err;
+                    return recv_pkt_proc_file(&stg_wheel_left_duty, vec_byte, sockfd);
                 }
                 case CMD_DATA_B1_RIGHT_DUTY:
                 {
-                    VecByte vec_data;
-                    FnState err = recv_pkt_file_return(&stg_m_right_duty, &vec_data, vec_byte, sockfd);
-                    vec_byte_free(&vec_data);
-                    return err;
+                    return recv_pkt_proc_file(&stg_wheel_right_duty, vec_byte, sockfd);
                 }
                 default: break;
             }
@@ -199,15 +182,11 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
         }
         case CMD_VEHI_B0_CONTROL:
         {
-            ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22));
-            vec_rm_all(vec_byte);
-            return recv_pkt_return(vec_byte, 0x31, sockfd);
+            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22);
         }
         case CMD_ARM_B0_CONTROL:
         {
-            ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32));
-            vec_rm_all(vec_byte);
-            return recv_pkt_return(vec_byte, 0x31, sockfd);
+            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32);
         }
         case 0x74:  // t
         {
@@ -224,10 +203,10 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
                     {
                         case 0x30:  // 0
                             fdacn_data_trsm_ready = FNC_DISABLE;
-                            return recv_pkt_return(vec_byte, 0x31, sockfd);
+                            return FNS_OK;
                         case 0x31:  // 1
                             fdacn_data_trsm_ready = FNC_ENABLE;
-                            return recv_pkt_return(vec_byte, 0x31, sockfd);
+                            return FNS_OK;
                         default: break;
                     }
                     break;
@@ -241,12 +220,12 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
                         case 0x30:
                         {
                             https_data_trsm_ready = FNC_DISABLE;
-                            return recv_pkt_return(vec_byte, 0x31, sockfd);
+                            return FNS_OK;
                         }
                         case 0x31:
                         {
                             https_data_trsm_ready = FNC_ENABLE;
-                            return recv_pkt_return(vec_byte, 0x31, sockfd);
+                            return FNS_OK;
                         }
                         default: break;
                     }
@@ -258,9 +237,9 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
         }
         default:
         {
-            if (vec_byte->len > FDCAN_VEC_BYTE_CAP) vec_byte->len = FDCAN_VEC_BYTE_CAP;
-            ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x0F));
-            ERROR_CHECK_FNS_RETURN(recv_pkt_return(vec_byte, 0x32, sockfd));
+            // if (vec_byte->len > FDCAN_VEC_BYTE_CAP) vec_byte->len = FDCAN_VEC_BYTE_CAP;
+            // ERROR_CHECK_FNS_RETURN(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x0F));
+            // ERROR_CHECK_FNS_RETURN(recv_pkt_return(vec_byte, 0x32, sockfd));
             break;
         }
     };
@@ -269,18 +248,38 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
     return FNS_NOT_FOUND;
 }
 
-static FnState recv_pkt_proc(size_t count)
+static FnState recv_pkt_return(uint8_t code, int sockfd)
 {
     VecByte vec_byte;
+    FnState result;
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_new(&vec_byte, 2));
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_push_byte(&vec_byte, code));
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_push_byte(&vec_byte, '\n'));
+    ERROR_CHECK_FNS_CLEANUP(https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, sockfd));
+    cleanup:
+    vec_byte_free(&vec_byte);
+    return result;
+}
+
+static FnState recv_pkt_proc(size_t count)
+{
+    VecByte vec_https, vec_fdcan;
     int sockfd;
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, HTTPS_RECV_VEC_MAX));
+    FnState result;
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_new(&vec_https, HTTPS_RECV_VEC_MAX));
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_new(&vec_fdcan, FDCAN_VEC_BYTE_CAP));
     for (size_t i = 0; i < count; i++)
     {
-        if (ERROR_CHECK_FNS_RAW(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_byte, &sockfd))) break;
-        recv_pkt_proc_inner(&vec_byte, sockfd);
+        ERROR_CHECK_FNS_CLEANUP(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_https, &sockfd));
+        while (!ERROR_CHECK_FNS_RAW(vec_byte_pop_can(&vec_https, &vec_fdcan)))
+        {
+            recv_pkt_proc_inner(&vec_fdcan, sockfd);
+        }
+        recv_pkt_return(0x31, sockfd);
     }
-    vec_byte_free(&vec_byte);
-    return FNS_OK;
+    cleanup:
+    vec_byte_free(&vec_https);
+    return result;
 }
 
 static UNUSED_FNC void https_data_task(void *arg)

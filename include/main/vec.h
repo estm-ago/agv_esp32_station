@@ -107,6 +107,8 @@ FnState vec_byte_add_len(VecByte* self, size_t len);
  * @return FNS_OVERFLOW 推入失敗（超過容量）
  */
 FnState vec_byte_push(VecByte* self, const void *src, size_t src_len);
+
+FnState vec_byte_pop_can(VecByte* self, VecByte* container);
 /**
  * @brief 將一 byte 推入 VecByte
  *

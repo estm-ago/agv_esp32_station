@@ -95,6 +95,8 @@ static esp_err_t https_server_start_inner(void)
     // Prepare keep-alive engine
     wss_keep_alive_config_t keep_alive_config = KEEP_ALIVE_CONFIG_DEFAULT();
     keep_alive_config.max_clients = max_clients;
+    keep_alive_config.keep_alive_period_ms = 15000;
+    keep_alive_config.not_alive_after_ms = 45000;
     keep_alive_config.client_not_alive_cb = client_not_alive_cb;
     keep_alive_config.check_client_alive_cb = check_client_alive_cb;
     wss_keep_alive_t keep_alive = wss_keep_alive_start(&keep_alive_config);

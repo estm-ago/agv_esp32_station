@@ -18,6 +18,7 @@
 #include <freertos/FreeRTOSConfig.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <freertos/event_groups.h>
 
 #define UNUSED_FNC __attribute__((unused))
 
@@ -25,12 +26,14 @@
 
 #define AGV_ESP32_DEVICE
 
-#define VEC_BYTE_MAX_CAP 4096
-#define TRCV_BUF_MAX_CAP 10
+#define VEC_BYTE_MAX_CAP    4096
+#define TRCV_BUF_MAX_CAP    10
 
-#define WIFI_DHCP "192.168.0.20"
-#define WIFI_SSID "HY-TPL-BF94"
-#define WIFI_PSWD "23603356"
+#define WIFI_STATIC     "192.168.68.20"
+#define WIFI_NETMASK    "255.255.255.0"
+#define WIFI_GW         "192.168.68.1"
+#define WIFI_SSID       "Vicky" // HY-TPL-BF94
+#define WIFI_PSWD       "vicky23447" // 23603356
 #define CONNECT_MAXIMUM_RETRY 5
 
 #define HTTPS_TRSM_VEC_MAX 4096
@@ -80,7 +83,7 @@ typedef int8_t FncState;
 #define FNC_DISABLE 0
 #define FNC_ENABLE  1
 
-#define ENABLE_CON_PKT_TEST
+// #define ENABLE_CON_PKT_TEST
 // #define DISABLE_FDCAN
 #define DISABLE_UART
 // #define DISABLE_UART_TRSM

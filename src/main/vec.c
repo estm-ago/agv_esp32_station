@@ -1,6 +1,6 @@
 #include "main/vec.h"
 
-inline void vec_rm_all(VecByte* self)
+void vec_rm_all(VecByte* self)
 {
     if (self->data == NULL) return;
     self->head = 0;
@@ -120,6 +120,18 @@ FnState vec_byte_push(VecByte* self, const void *src, size_t src_len)
     return FNS_OK;
 }
 
+FnState vec_byte_pop_can(VecByte* self, VecByte* container)
+{
+    size_t len = self->len;
+    if (self->len > FDCAN_VEC_BYTE_CAP) len = FDCAN_VEC_BYTE_CAP;
+    vec_byte_realign(self);
+    FnState result;
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_push(container, self->data, len));
+    ERROR_CHECK_FNS_CLEANUP(vec_rm_range(self, 0, FDCAN_VEC_BYTE_CAP));
+    cleanup:
+    return result;
+}
+
 FnState vec_byte_get_byte(const VecByte* self, size_t id, uint8_t *value)
 {
     if (self->data == NULL) return FNS_ERR_OOM;
@@ -129,7 +141,7 @@ FnState vec_byte_get_byte(const VecByte* self, size_t id, uint8_t *value)
     return FNS_OK;
 }
 
-inline FnState vec_byte_pop_byte(VecByte* self, size_t id, uint8_t* value)
+FnState vec_byte_pop_byte(VecByte* self, size_t id, uint8_t* value)
 {
     if (self->data == NULL) return FNS_ERR_OOM;
     ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(self, id, value));
@@ -137,13 +149,13 @@ inline FnState vec_byte_pop_byte(VecByte* self, size_t id, uint8_t* value)
     return FNS_OK;
 }
 
-inline FnState vec_byte_push_byte(VecByte* self, uint8_t value)
+FnState vec_byte_push_byte(VecByte* self, uint8_t value)
 {
     if (self->data == NULL) return FNS_ERR_OOM;
     return vec_byte_push(self, &value, 1);
 }
 
-inline uint16_t swap_u16(const uint16_t value)
+uint16_t swap_u16(const uint16_t value)
 {
     return    ((value & 0x00FFU) << 8)
             | ((value & 0xFF00U) >> 8);
@@ -156,7 +168,7 @@ FnState vec_byte_push_u16(VecByte* self, uint16_t value)
     return vec_byte_push(self, &val, sizeof(value));
 }
 
-inline uint32_t swap_u32(uint32_t value)
+uint32_t swap_u32(uint32_t value)
 {
     return    ((value & 0x000000FFU) << 24)
             | ((value & 0x0000FF00U) <<  8)
@@ -177,7 +189,7 @@ FnState vec_byte_get_u32(VecByte* self, size_t id, uint32_t* value)
     return FNS_OK;
 }
 
-inline FnState vec_byte_pop_u32(VecByte* self, size_t id, uint32_t* value)
+FnState vec_byte_pop_u32(VecByte* self, size_t id, uint32_t* value)
 {
     if (self->data == NULL) return FNS_ERR_OOM;
     ERROR_CHECK_FNS_RETURN(vec_byte_get_u32(self, id, value));
