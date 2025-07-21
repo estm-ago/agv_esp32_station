@@ -18,7 +18,13 @@ static const size_t max_clients = 4;
 static bool client_not_alive_cb(wss_keep_alive_t alive_handle, int sockfd)
 {
     ESP_LOGE(TAG, "Client not alive, closing fd %d", sockfd);
-    httpd_sess_trigger_close(wss_keep_alive_get_user_ctx(alive_handle), sockfd);
+    httpd_handle_t* user_ctx = wss_keep_alive_get_user_ctx(alive_handle);
+    if (user_ctx == NULL)
+    {
+        ESP_LOGE(TAG, "User context is NULL");
+        return false;
+    }
+    httpd_sess_trigger_close(user_ctx, sockfd);
     return true;
 }
 
