@@ -234,27 +234,20 @@ static FnState file_data_add_inner(FILE* file, FileHeader* file_h, VecByte* vec_
 
 FnState file_data_add(const char* path, VecByte* vec_byte)
 {
+    if (vec_byte->len == 0) return FNS_BUF_EMPTY;
     FILE* file;
     ERROR_CHECK_FNS_RETURN(file_open(path, "rb+", &file));
     FileHeader file_h;
-    FnState err = file_header_read(file, &file_h);
-    if (ERROR_CHECK_FNS_RAW(err))
-    {
-        fclose(file);
-        return err;
-    }
+    FnState result;
+    ERROR_CHECK_FNS_CLEANUP(file_header_read(file, &file_h));
     if (vec_byte->len % file_h.type != 0)
     {
         ESP_LOGE(TAG, "Data no match");
-        fclose(file);
-        return FNS_FAIL;
+        result = FNS_FAIL;
+        goto cleanup;
     }
-    err = file_data_add_inner(file, &file_h, vec_byte);
-    if (ERROR_CHECK_FNS_RAW(err))
-    {
-        fclose(file);
-        return err;
-    }
+    ERROR_CHECK_FNS_CLEANUP(file_data_add_inner(file, &file_h, vec_byte));
+    cleanup:
     fclose(file);
-    return FNS_OK;
+    return result;
 }

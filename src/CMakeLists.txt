@@ -15,7 +15,7 @@ idf_component_register(
         bt
         fatfs
         sdmmc
-    # EMBED_TXTFILES 
-    #     "../certs/servercert.pem"
-    #     "../certs/prvtkey.pem"
+    EMBED_TXTFILES 
+        "../certs/servercert.pem"
+        "../certs/prvtkey.pem"
 )

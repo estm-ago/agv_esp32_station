@@ -182,11 +182,11 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
         }
         case CMD_VEHI_B0_CONTROL:
         {
-            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x22);
+            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x21);
         }
         case CMD_ARM_B0_CONTROL:
         {
-            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x32);
+            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x31);
         }
         case 0x74:  // t
         {

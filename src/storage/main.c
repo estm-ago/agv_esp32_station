@@ -85,10 +85,10 @@ FnState storage_store_data(FileData* file_data)
     // ESP_LOGI(TAG, "buffer data >>>");
     // ESP_LOG_BUFFER_HEXDUMP(TAG, file_data->buffer.data, file_data->buffer.len, ESP_LOG_INFO);
     FnState err = file_data_add(file_data->path, &file_data->buffer);
-    // vec_rm_all(&file_data->buffer);
+    vec_rm_all(&file_data->buffer);
     // VecByte vec_byte;
-    // vec_byte_new(&vec_byte, file_data->type * 80);
-    // file_data_get(file_data->path, 80, &vec_byte);
+    // vec_byte_new(&vec_byte, file_data->type * 20);
+    // file_data_get(file_data->path, 20, &vec_byte);
     // ESP_LOGI(TAG, "file data >>>");
     // ESP_LOG_BUFFER_HEXDUMP(TAG, vec_byte.data, vec_byte.len, ESP_LOG_INFO);
     return err;

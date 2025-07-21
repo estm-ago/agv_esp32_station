@@ -1,7 +1,6 @@
 #include "connectivity/uart/main.h"
 #include "string.h"
 #include "driver/uart.h"
-#include "main/global_variable.h"
 #include "main/config.h"
 #include "connectivity/trcv_buffer.h"
 #include "connectivity/cmds.h"

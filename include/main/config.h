@@ -29,11 +29,13 @@
 #define VEC_BYTE_MAX_CAP    4096
 #define TRCV_BUF_MAX_CAP    10
 
-#define WIFI_STATIC     "192.168.68.20"
+#define WIFI_STATIC     "10.27.246.20"
 #define WIFI_NETMASK    "255.255.255.0"
-#define WIFI_GW         "192.168.68.1"
-#define WIFI_SSID       "Vicky" // HY-TPL-BF94
-#define WIFI_PSWD       "vicky23447" // 23603356
+#define WIFI_GW         "10.27.246.37"
+#define WIFI_SSID       "HY-TPL-BF940"
+#define WIFI_PSWD       "23603356"
+// #define WIFI_SSID       "Vicky"
+// #define WIFI_PSWD       "vicky23447"
 #define CONNECT_MAXIMUM_RETRY 5
 
 #define HTTPS_TRSM_VEC_MAX 4096

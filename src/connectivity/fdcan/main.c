@@ -128,70 +128,70 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte)
                 case CMD_DATA_B1_LEFT_SPEED:
                 {
                     uint32_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_u32(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_u32(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_u32(&stg_wheel_left_speed.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_RIGHT_SPEED:
                 {
                     uint32_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_u32(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_u32(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_u32(&stg_wheel_right_speed.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_LEFT_DUTY:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_wheel_left_duty.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_RIGHT_DUTY:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_wheel_right_duty.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_ARM_BOTTOM:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_arm_bottom_angle.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_ARM_SHOULDER:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_arm_shoulder_angle.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_ARM_ELBOW_BTM:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_arm_elbow_btm_angle.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_ARM_ELBOW_TOP:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_arm_elbow_top_angle.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_ARM_WRIST:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_arm_wrist_angle.buffer, value));
                     return FNS_OK;
                 }
                 case CMD_DATA_B1_ARM_FINGER:
                 {
                     uint8_t value;
-                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 2, &value));
+                    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 4, &value));
                     ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&stg_arm_finger_angle.buffer, value));
                     return FNS_OK;
                 }
