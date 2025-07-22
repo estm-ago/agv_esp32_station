@@ -38,10 +38,10 @@
 // #define WIFI_PSWD       "vicky23447"
 #define CONNECT_MAXIMUM_RETRY 5
 
-#define HTTPS_TRSM_VEC_MAX 4096
+#define HTTPS_TRSM_VEC_MAX 2048
 #define HTTPS_RECV_VEC_MAX 128 // Min 128
 #define HTTPS_TRCV_BUF_MAX 5
-#define HTTPS_RECV_BUF_MAX 10
+#define HTTPS_RECV_BUF_MAX 20
 
 // #define DISABLE_FDCAN
 #define FDCAN_GPIO_TX       GPIO_NUM_25
