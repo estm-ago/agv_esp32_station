@@ -27,7 +27,7 @@
 #define AGV_ESP32_DEVICE
 
 #define VEC_BYTE_MAX_CAP    4096
-#define TRCV_BUF_MAX_CAP    10
+#define TRCV_BUF_MAX_CAP    20
 
 #define WIFI_STATIC     "10.27.246.20"
 #define WIFI_NETMASK    "255.255.255.0"
@@ -39,8 +39,8 @@
 #define CONNECT_MAXIMUM_RETRY 5
 
 #define HTTPS_TRSM_VEC_MAX 2048
-#define HTTPS_RECV_VEC_MAX 128 // Min 128
 #define HTTPS_TRCV_BUF_MAX 5
+#define HTTPS_RECV_VEC_MAX 128 // Min 128
 #define HTTPS_RECV_BUF_MAX 20
 
 // #define DISABLE_FDCAN

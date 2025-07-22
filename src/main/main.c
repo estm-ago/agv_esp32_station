@@ -37,7 +37,6 @@ void app_main(void) {
 
     while (1) {
         storage_loop();
-        // ESP_LOGI(TAG, "Running main loop...");
         
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

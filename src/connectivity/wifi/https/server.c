@@ -7,7 +7,7 @@
 #include "connectivity/wifi/https/keep_alive.h"
 
 static const char *TAG = "user_https_server";
-static const size_t max_clients = 4;
+static const size_t max_clients = 7;
 
 /**
  * @brief 當客戶端不存活時的回呼，關閉相應連線
@@ -102,8 +102,8 @@ static esp_err_t https_server_start_inner(void)
     // Prepare keep-alive engine
     wss_keep_alive_config_t keep_alive_config = KEEP_ALIVE_CONFIG_DEFAULT();
     keep_alive_config.max_clients = max_clients;
-    // keep_alive_config.keep_alive_period_ms = 15000;
-    // keep_alive_config.not_alive_after_ms = 45000;
+    keep_alive_config.keep_alive_period_ms = 15000;
+    keep_alive_config.not_alive_after_ms = 45000;
     keep_alive_config.client_not_alive_cb = client_not_alive_cb;
     keep_alive_config.check_client_alive_cb = check_client_alive_cb;
     wss_keep_alive_t keep_alive = wss_keep_alive_start(&keep_alive_config);
@@ -123,8 +123,8 @@ static esp_err_t https_server_start_inner(void)
     config.servercert = servercert_start;
     config.servercert_len = servercert_end - servercert_start;
 
-    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
-    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
+    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_key_start");
+    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_key_end");
     config.prvtkey_pem = prvtkey_pem_start;
     config.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
 

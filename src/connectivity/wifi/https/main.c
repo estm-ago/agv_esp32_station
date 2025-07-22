@@ -23,6 +23,7 @@ static httpd_ws_frame_t recv_pkt;
 WSByteTrcvBuf https_trsm_pkt_buf;
 WSByteTrcvBuf https_recv_pkt_buf;
 
+VecByte vec_sep;
 static UNUSED_FNC void https_init(void)
 {
     ERROR_CHECK_FNS_HANDLE(vec_byte_new(&https_trsm_buf, HTTPS_TRSM_VEC_MAX));
@@ -30,6 +31,66 @@ static UNUSED_FNC void https_init(void)
     trsm_pkt.payload = https_trsm_buf.data;
     ERROR_CHECK_FNS_HANDLE(vec_byte_new(&https_recv_buf, HTTPS_RECV_VEC_MAX));
     ERROR_CHECK_FNS_HANDLE(https_trcv_buf_setup(&https_recv_pkt_buf, HTTPS_RECV_BUF_MAX, HTTPS_RECV_VEC_MAX));
+    ERROR_CHECK_FNS_HANDLE(vec_byte_new(&vec_sep, FDCAN_VEC_BYTE_CAP));
+}
+
+static FnState recv_pkt_proc_file(FileData* file_data, VecByte* in_byte, int sockfd)
+{
+    FnState result;
+    VecByte vec_byte;
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_new(&vec_byte, STORAGE_GET_DATA * file_data->type + 2));
+    // ERROR_CHECK_FNS_CLEANUP(storage_store_data(file_data));
+    vec_byte_realign(in_byte);
+    ERROR_CHECK_FNS_CLEANUP(vec_byte_push(&vec_byte, in_byte->data, 2));
+    ERROR_CHECK_FNS_CLEANUP(file_data_get(file_data->path, STORAGE_GET_DATA, &vec_byte));
+    ERROR_CHECK_FNS_CLEANUP(https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, sockfd));
+    cleanup:
+    vec_byte_free(&vec_byte);
+    return result;
+}
+
+static FnState instant_recv_proc(VecByte* vec_byte, int sockfd)
+{
+    uint8_t code;
+    ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 0, &code));
+    switch (code)
+    {
+    case CMD_DATA_B0_CONTROL:
+        {
+            ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
+            switch (code)
+            {
+                case CMD_DATA_B1_LEFT_SPEED:
+                {
+                    return recv_pkt_proc_file(&stg_wheel_left_speed, vec_byte, sockfd);
+                }
+                case CMD_DATA_B1_RIGHT_SPEED:
+                {
+                    return recv_pkt_proc_file(&stg_wheel_right_speed, vec_byte, sockfd);
+                }
+                case CMD_DATA_B1_LEFT_DUTY:
+                {
+                    return recv_pkt_proc_file(&stg_wheel_left_duty, vec_byte, sockfd);
+                }
+                case CMD_DATA_B1_RIGHT_DUTY:
+                {
+                    return recv_pkt_proc_file(&stg_wheel_right_duty, vec_byte, sockfd);
+                }
+                default: break;
+            }
+            break;
+        }
+        case CMD_VEHI_B0_CONTROL:
+        {
+            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x21);
+        }
+        case CMD_ARM_B0_CONTROL:
+        {
+            return fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, vec_byte, 0x31);
+        }
+        default: break;
+    }
+    return FNS_OK;
 }
 
 static esp_err_t ws_handler(httpd_req_t *req)
@@ -65,7 +126,8 @@ static esp_err_t ws_handler(httpd_req_t *req)
         case HTTPD_WS_TYPE_PONG:
         {
             ESP_LOGD(TAG, "Received PONG message");
-            return wss_keep_alive_client_is_active(httpd_get_global_user_ctx(req->handle), httpd_req_to_sockfd(req));
+            wss_keep_alive_t keep_alive = (wss_keep_alive_t)httpd_get_global_user_ctx(req->handle);
+            return wss_keep_alive_client_is_active(keep_alive, httpd_req_to_sockfd(req));
         }
         case HTTPD_WS_TYPE_CLOSE:
         {
@@ -76,12 +138,14 @@ static esp_err_t ws_handler(httpd_req_t *req)
         case HTTPD_WS_TYPE_TEXT:
         case HTTPD_WS_TYPE_BINARY:
         {
+            wss_keep_alive_t keep_alive = (wss_keep_alive_t)httpd_get_global_user_ctx(req->handle);
             int sockfd = httpd_req_to_sockfd(req);
             ESP_LOGI(TAG, "Msg recv FD: %d len: %d >>>", sockfd, https_recv_buf.len);
             ESP_LOG_BUFFER_HEXDUMP(TAG, https_recv_buf.data, https_recv_buf.len, ESP_LOG_INFO);
+
             https_trcv_buf_push(&https_recv_pkt_buf, &https_recv_buf, sockfd);
             ESP_LOGI(TAG, "Buf count: %d", https_recv_pkt_buf.trcv_buf.len);
-            break;
+            return wss_keep_alive_client_is_active(keep_alive, sockfd);
         }
         default:
         {
@@ -131,21 +195,6 @@ static FnState trsm_pkt_proc(void)
     }
     vec_byte_free(&vec_byte);
     return FNS_OK;
-}
-
-static FnState recv_pkt_proc_file(FileData* file_data, VecByte* in_byte, int sockfd)
-{
-    FnState result;
-    VecByte vec_byte;
-    ERROR_CHECK_FNS_CLEANUP(vec_byte_new(&vec_byte, STORAGE_GET_DATA * file_data->type + 2));
-    // ERROR_CHECK_FNS_CLEANUP(storage_store_data(file_data));
-    vec_byte_realign(in_byte);
-    ERROR_CHECK_FNS_CLEANUP(vec_byte_push(&vec_byte, in_byte->data, 2));
-    ERROR_CHECK_FNS_CLEANUP(file_data_get(file_data->path, STORAGE_GET_DATA, &vec_byte));
-    ERROR_CHECK_FNS_CLEANUP(https_trcv_buf_push(&https_trsm_pkt_buf, &vec_byte, sockfd));
-    cleanup:
-    vec_byte_free(&vec_byte);
-    return result;
 }
 
 static FnState recv_pkt_proc_inner(VecByte* vec_byte, int sockfd)
@@ -279,6 +328,7 @@ static FnState recv_pkt_proc(size_t count)
     }
     cleanup:
     vec_byte_free(&vec_https);
+    vec_byte_free(&vec_fdcan);
     return result;
 }
 
@@ -306,6 +356,5 @@ FnState https_server_setup(void) {
     https_server_start();
     xTaskCreate(https_data_task, "https_data_task", 6144, NULL, HTTPS_DATA_TASK_PRIO_SEQU, NULL);
 
-    // wss_server_send_messages(&https_server);
     return FNS_OK;
 }

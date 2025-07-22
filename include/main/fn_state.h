@@ -108,6 +108,7 @@ extern FnState last_error;
         if (_err != FNS_OK)             \
         {                               \
             last_error = _err;          \
+            ESP_LOGE(TAG, "ERR_H: %d", _err);\
             Error_Handler();            \
         }                               \
     } while (0)

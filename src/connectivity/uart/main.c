@@ -5,7 +5,7 @@
 #include "connectivity/trcv_buffer.h"
 #include "connectivity/cmds.h"
 
-static const char *TAG = "user_uart_main";
+// static const char *TAG = "user_uart_main";
 
 bool uart_enable = false;
 
