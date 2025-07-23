@@ -124,12 +124,10 @@ FnState vec_byte_pop_can(VecByte* self, VecByte* container)
 {
     size_t len = self->len;
     if (self->len > FDCAN_VEC_BYTE_CAP) len = FDCAN_VEC_BYTE_CAP;
+    vec_rm_all(container);
     vec_byte_realign(self);
-    FnState result;
-    ERROR_CHECK_FNS_CLEANUP(vec_byte_push(container, self->data, len));
-    ERROR_CHECK_FNS_CLEANUP(vec_rm_range(self, 0, FDCAN_VEC_BYTE_CAP));
-    cleanup:
-    return result;
+    ERROR_CHECK_FNS_RETURN(vec_byte_push(container, self->data + self->head, len));
+    return vec_rm_range(self, 0, FDCAN_VEC_BYTE_CAP);
 }
 
 FnState vec_byte_get_byte(const VecByte* self, size_t id, uint8_t *value)

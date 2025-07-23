@@ -1,18 +1,10 @@
-#include <esp_system.h>
-#include <esp_log.h>
 #include <nvs_flash.h>
-#include <esp_event.h>
 #include <esp_netif.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-// #include <freertos/event_groups.h>
-// #include "esp_mac.h"
-// #include <esp_wifi.h>
-// #include "esp_http_server.h"
 // #include "lwip/err.h"
 // #include "lwip/sys.h"
 // #include <lwip/sockets.h>
 // #include "lwip/netdb.h"
+#include <esp_heap_caps.h>
 #include "main/config.h"
 #include "connectivity/uart/main.h"
 #include "connectivity/fdcan/main.h"
@@ -21,6 +13,25 @@
 #include "storage/main.h"
 
 static const char *TAG = "user_main";
+
+void memory_monitor_task(void* pvParameters) {
+    while (1) {
+        // 剩餘堆積 (bytes)
+        size_t free_heap       = esp_get_free_heap_size();
+        // 自啟動以來的最小剩餘堆積 (bytes)
+        size_t min_free_heap   = esp_get_minimum_free_heap_size();
+        // 最大連續可分配區块 (bytes)
+        size_t largest_block   = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
+        // PSRAM（若有接外部 PSRAM）剩餘
+        size_t free_psram      = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+
+        ESP_LOGI(TAG, "Heap free: %u  |  Min free: %u  |  Largest: %u",
+                 free_heap, min_free_heap, largest_block);
+        ESP_LOGI(TAG, "PSRAM free: %u", free_psram);
+
+        vTaskDelay(pdMS_TO_TICKS(5000));  // 每秒更新一次
+    }
+}
 
 void app_main(void) {
     ESP_LOGI(TAG, "Start");
@@ -34,6 +45,8 @@ void app_main(void) {
 
     wifi_setup_sta();
     https_server_setup();
+
+    xTaskCreate(memory_monitor_task, "mem_monitor", 2048, NULL, tskIDLE_PRIORITY + 1, NULL);
 
     while (1) {
         storage_loop();

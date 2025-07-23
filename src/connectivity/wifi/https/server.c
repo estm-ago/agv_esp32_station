@@ -123,8 +123,8 @@ static esp_err_t https_server_start_inner(void)
     config.servercert = servercert_start;
     config.servercert_len = servercert_end - servercert_start;
 
-    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_key_start");
-    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_key_end");
+    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
+    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
     config.prvtkey_pem = prvtkey_pem_start;
     config.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
 

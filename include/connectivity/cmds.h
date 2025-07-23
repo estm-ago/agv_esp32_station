@@ -61,6 +61,14 @@
 //----------------------------------------------------------------------------------------------------
 #define CMD_MAP_B0_CONTROL          (uint8_t)0x30   // 地圖控制
 
+#define CMD_MAP_B1_CHECK            (uint8_t)0x00
+#define CMD_MAP_B1_SET              (uint8_t)0x01
+
+#define CMD_MAP_B2_FORWARD          (uint8_t)0x00
+#define CMD_MAP_B2_BACKWARD         (uint8_t)0x01
+#define CMD_MAP_B2_LEFT             (uint8_t)0x02
+#define CMD_MAP_B2_RIGHT            (uint8_t)0x03
+
 //----------------------------------------------------------------------------------------------------
 #define CMD_ARM_B0_CONTROL          (uint8_t)0x31   // 手臂控制
 
@@ -74,7 +82,6 @@
 
 #define CMD_ARM_B2_STOP             (uint8_t)0x00   // 停止
 #define CMD_ARM_B2_SET              (uint8_t)0x01   // 方位設定
-#define CMD_ARM_B2_IDLE             (uint8_t)0x00   // 待機位置
 
 //      CMD_ARM_B3_VALUE                            // 方位值0-100
 
@@ -95,6 +102,6 @@
 #define CMD_RFID_B4_WRITE           (uint8_t)0x01
 
 //----------------------------------------------------------------------------------------------------
-#define CMD_B0_TEST                 (uint8_t)0xF0
+#define CMD_B0_TEST                 (uint8_t)0xFF
 
 #define CMD_B1_TEST0                (uint8_t)0x00

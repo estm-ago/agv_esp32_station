@@ -19,14 +19,6 @@ static VecByte fdcan_recv_buf;
 FdcanByteTrcvBuf fdcan_trsm_pkt_buf;
 FdcanByteTrcvBuf fdcan_recv_pkt_buf;
 
-static UNUSED_FNC void fdcan_init(void)
-{
-    ERROR_CHECK_FNS_HANDLE(vec_byte_new(&fdcan_trsm_buf, 8));
-    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_setup(&fdcan_trsm_pkt_buf, FDCAN_TRCV_BUF_CAP, FDCAN_VEC_BYTE_CAP));
-    ERROR_CHECK_FNS_HANDLE(vec_byte_new(&fdcan_recv_buf, 8));
-    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_setup(&fdcan_recv_pkt_buf, FDCAN_TRCV_BUF_CAP, FDCAN_VEC_BYTE_CAP));
-}
-
 static UNUSED_FNC void fdcan_alerts_task(void *arg)
 {
     esp_err_t err;
@@ -73,10 +65,10 @@ static UNUSED_FNC void fdcan_recv_task(void *arg)
         }
         vec_rm_all(&fdcan_recv_buf);
         vec_byte_push(&fdcan_recv_buf, msg.data, msg.data_length_code);
-        ESP_LOGI(TAG, "Msg recv ID: 0x%lX  LEN: %02X >>>", msg.identifier, fdcan_recv_buf.len);
-        ESP_LOG_BUFFER_HEXDUMP(TAG, fdcan_recv_buf.data, fdcan_recv_buf.len, ESP_LOG_INFO);
+        // ESP_LOGI(TAG, "Msg recv ID: 0x%lX  LEN: %02X >>>", msg.identifier, fdcan_recv_buf.len);
+        // ESP_LOG_BUFFER_HEXDUMP(TAG, fdcan_recv_buf.data, fdcan_recv_buf.len, ESP_LOG_INFO);
         fdcan_trcv_buf_push(&fdcan_recv_pkt_buf, &fdcan_recv_buf, msg.identifier);
-        ESP_LOGI(TAG, "Buf len: %d", fdcan_recv_pkt_buf.trcv_buf.len);
+        // ESP_LOGI(TAG, "Buf len: %d", fdcan_recv_pkt_buf.trcv_buf.len);
     }
 }
 
@@ -199,6 +191,18 @@ static FnState recv_pkt_proc_inner(VecByte* vec_byte)
             }
             break;
         }
+        case CMD_MAP_B0_CONTROL:
+        {
+            ERROR_CHECK_FNS_RETURN(vec_byte_get_byte(vec_byte, 1, &code));
+            switch (code)
+            {
+                case CMD_MAP_B1_CHECK:
+                {
+                    return https_trcv_buf_push(&https_trsm_pkt_buf, vec_byte, 57);
+                }
+            }
+            break;
+        }
         default: break;
     }
     last_error = FNS_NOT_FOUND;
@@ -222,6 +226,14 @@ static FnState recv_pkt_proc(size_t count)
 
 static UNUSED_FNC void fdcan_data_task(void *arg)
 {
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    VecByte vec_byte;
+    ERROR_CHECK_FNS_HANDLE(vec_byte_new(&vec_byte, FDCAN_VEC_BYTE_CAP));
+    ERROR_CHECK_FNS_HANDLE(vec_byte_push_byte(&vec_byte, CMD_DATA_B0_START));
+    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x21));
+    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x31));
+    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x21));
+    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_push(&fdcan_trsm_pkt_buf, &vec_byte, 0x31));
     size_t tick = 0;
     while (1)
     {
@@ -239,7 +251,10 @@ static UNUSED_FNC void fdcan_data_task(void *arg)
 
 void fdcan_setup(void)
 {
-    fdcan_init();
+    ERROR_CHECK_FNS_HANDLE(vec_byte_new(&fdcan_trsm_buf, 8));
+    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_setup(&fdcan_trsm_pkt_buf, FDCAN_TRCV_BUF_CAP, FDCAN_VEC_BYTE_CAP));
+    ERROR_CHECK_FNS_HANDLE(vec_byte_new(&fdcan_recv_buf, 8));
+    ERROR_CHECK_FNS_HANDLE(fdcan_trcv_buf_setup(&fdcan_recv_pkt_buf, FDCAN_TRCV_BUF_CAP, FDCAN_VEC_BYTE_CAP));
     const twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(FDCAN_GPIO_TX, FDCAN_GPIO_RX, TWAI_MODE_NORMAL);
     const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
     const twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();

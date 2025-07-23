@@ -10,15 +10,14 @@ static const char *TAG = "user_https_main";
 httpd_handle_t https_server = NULL;
 FncState https_data_trsm_ready = FNC_DISABLE;
 
-static VecByte https_trsm_buf;
-static VecByte https_recv_buf;
-
 static httpd_ws_frame_t trsm_pkt = {
     .type       = HTTPD_WS_TYPE_BINARY,
     .fragmented = false,
     .final      = true,
 };
+static VecByte https_trsm_buf;
 static httpd_ws_frame_t recv_pkt;
+static VecByte https_recv_buf;
 
 WSByteTrcvBuf https_trsm_pkt_buf;
 WSByteTrcvBuf https_recv_pkt_buf;
@@ -106,7 +105,8 @@ static esp_err_t ws_handler(httpd_req_t *req)
         ESP_LOGE(TAG, "httpd_ws_recv_frame failed to get frame len with %d", ret);
         return ret;
     }
-    https_recv_buf.len = recv_pkt.len;
+    FnState result = vec_byte_add_len(&https_recv_buf, recv_pkt.len);
+    if (result != FNS_OK) return result;
     if (recv_pkt.len) {
         ESP_LOGI(TAG, "frame len is %d", https_recv_buf.len);
         ret = httpd_ws_recv_frame(req, &recv_pkt, recv_pkt.len);
@@ -322,8 +322,10 @@ static FnState recv_pkt_proc(size_t count)
         ERROR_CHECK_FNS_CLEANUP(https_trcv_buf_pop(&https_recv_pkt_buf, &vec_https, &sockfd));
         while (!ERROR_CHECK_FNS_RAW(vec_byte_pop_can(&vec_https, &vec_fdcan)))
         {
+            ESP_LOGI(TAG, "R Length: %d", vec_https.len);
             recv_pkt_proc_inner(&vec_fdcan, sockfd);
         }
+        ESP_LOGI(TAG, "OR Length: %d", vec_https.len);
         recv_pkt_return(0x31, sockfd);
     }
     cleanup:

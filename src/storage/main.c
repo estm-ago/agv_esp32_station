@@ -66,16 +66,16 @@ static FnState file_buf_init(FileData* file_data)
 FnState storage_setup(void)
 {
     sd_setup();
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_wheel_left_speed));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_wheel_left_duty));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_wheel_right_speed));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_wheel_right_duty));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_arm_bottom_angle));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_arm_shoulder_angle));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_arm_elbow_btm_angle));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_arm_elbow_top_angle));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_arm_wrist_angle));
-    ERROR_CHECK_FNS_RETURN(file_buf_init(&stg_arm_finger_angle));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_left_speed));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_left_duty));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_right_speed));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_right_duty));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_bottom_angle));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_shoulder_angle));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_elbow_btm_angle));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_elbow_top_angle));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_wrist_angle));
+    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_finger_angle));
     return FNS_OK;
 }
 

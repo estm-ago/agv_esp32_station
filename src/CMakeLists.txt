@@ -17,5 +17,5 @@ idf_component_register(
         sdmmc
     EMBED_TXTFILES 
         "../certs/servercert.pem"
-        "../certs/prvtkey.key"
+        "../certs/prvtkey.pem"
 )
