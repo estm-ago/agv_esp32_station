@@ -1,10 +1,10 @@
 #include "main/fn_state.h"
 
-FnState last_error = FNS_INVALID;
+ErrorType last_error;
 
 #ifdef PRINCIPAL_PROGRAM
 
-FnState_h error_state = {
+Result_h error_state = {
     .vehicle_test_no_load_speed = FNS_INVALID,
     .vehicle_over_hall_fall_back = FNS_INVALID,
     .vehicle_rotate_in_place_hall = FNS_INVALID,
@@ -15,7 +15,7 @@ FnState_h error_state = {
     .breakdown_all_hall_lost__path_not_found = FNS_INVALID,
 };
 
-void timeout_error(uint32_t start_time, FnState *error_parameter) {
+void timeout_error(uint32_t start_time, Result *error_parameter) {
     if (!sys_run_switch.enable_timeout_error) return;
 
     if (HAL_GetTick() - start_time > ERROR_TIMEOUT_TIME_LIMIT) {

@@ -25,6 +25,6 @@ typedef struct FileHeader
     uint32_t head;
 } FileHeader;
 
-FnState file_new(const char* path, const FileHeader* file_h);
-FnState file_data_get(const char* path, uint32_t count, VecByte* vec_byte);
-FnState file_data_add(const char* path, VecByte* vec_byte);
+Result file_new(const char* path, const FileHeader* file_h);
+Result file_data_get(const char* path, uint32_t count, VecByte* vec_byte);
+Result file_data_add(const char* path, VecByte* vec_byte);

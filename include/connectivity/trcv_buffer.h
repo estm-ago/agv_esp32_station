@@ -11,7 +11,7 @@ typedef struct ByteTrcvBuf
     size_t      len;
 } ByteTrcvBuf;
 
-FnState connect_trcv_buf_setup(ByteTrcvBuf* self, size_t buf_size, size_t data_size);
+Result connect_trcv_buf_setup(ByteTrcvBuf* self, size_t buf_size, size_t data_size);
 /**
  * @brief 將封包推入環形緩衝區
  * 
@@ -19,9 +19,9 @@ FnState connect_trcv_buf_setup(ByteTrcvBuf* self, size_t buf_size, size_t data_s
  * @param vec_byte 推入的封包
  * 
  * @return FNS_OK 推入成功
- * @return FNS_OVERFLOW 推入失敗（超過容量）
+ * @return RESULT_ERROR(RES_ERR_OVERFLOW) 推入失敗（超過容量）
  */
-FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte);
+Result connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte);
 /**
  * @brief 從環形緩衝區彈出一個封包
  *
@@ -29,13 +29,13 @@ FnState connect_trcv_buf_push(ByteTrcvBuf* self, VecByte* vec_byte);
  * @param vec_byte 接收彈出的封包
  * 
  * @return FNS_OK 彈出成功
- * @return FNS_BUF_EMPTY 彈出失敗（緩衝區為空）
+ * @return RESULT_ERROR(RES_ERR_EMPTY); 彈出失敗（緩衝區為空）
  */
-FnState connect_trcv_buf_pop(ByteTrcvBuf* self, VecByte* vec_byte);
+Result connect_trcv_buf_pop(ByteTrcvBuf* self, VecByte* vec_byte);
 
 #define ERROR_CHECK_FNS_WRI_PUSH(expr1, expr2, cleanup) \
     do {                                                \
-        FnState _err = (expr1);                         \
+        Result _err = (expr1);                         \
         if (_err == FNS_OK)                             \
         {                                               \
             _err = (expr2);                             \

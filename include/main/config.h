@@ -47,7 +47,7 @@
 #define FDCAN_GPIO_TX       GPIO_NUM_25
 #define FDCAN_GPIO_RX       GPIO_NUM_26
 #define FDCAN_VEC_BYTE_CAP  8
-#define FDCAN_TRCV_BUF_CAP  10
+#define FDCAN_TRCV_BUF_CAP  20
 
 #define STM32_UART          UART_NUM_2
 #define STM32_UART_TX       GPIO_NUM_17

@@ -17,23 +17,23 @@ ByteTrcvBuf uart_rv_pkt_buf;
 
 TransceiveFlags transceive_flags = {0};
 
-static FnState uart_read_t(const char* logName)
+static Result uart_read_t(const char* logName)
 {
     vec_rm_all(&uart_rv_buf);
     uart_rv_buf.len = uart_read_bytes(STM32_UART, uart_rv_buf.data, uart_rv_buf.cap, pdMS_TO_TICKS(1));
-    if (uart_rv_buf.len <= 0) return FNS_BUF_EMPTY;
+    if (uart_rv_buf.len <= 0) return RESULT_ERROR(RES_ERR_EMPTY);;
     ESP_LOGI(logName, "Read %d bytes >>>", uart_rv_buf.len);
     ESP_LOG_BUFFER_HEXDUMP(logName, uart_rv_buf.data, uart_rv_buf.len, ESP_LOG_INFO);
     if (
         (uart_rv_buf.data[0] == UART_START_CODE)
         && (uart_rv_buf.data[uart_rv_buf.len-1] == UART_END_CODE)
     ) {
-        ERROR_CHECK_FNS_RETURN(connect_trcv_buf_push(&uart_rv_pkt_buf, &uart_rv_buf));
-        return FNS_OK;
+        RESULT_CHECK_RET_RES(connect_trcv_buf_push(&uart_rv_pkt_buf, &uart_rv_buf));
+        return RESULT_OK(NULL);
     }
     else
     {
-        return FNS_NOT_FOUND;
+        return RESULT_ERROR(RES_ERR_NOT_FOUND);
     }
 }
 
@@ -41,34 +41,36 @@ static UNUSED_FNC void uart_recv_task(void *arg) {
     static const char *TASK_TAG = "user_uart_RECV";
     esp_log_level_set(TASK_TAG, ESP_LOG_INFO);
     ESP_LOGI(TASK_TAG, "Uart RX task start");
+    Result result;
     for(;;)
     {
-        if (uart_read_t(TASK_TAG) != FNS_BUF_EMPTY) continue;
+        result = uart_read_t(TASK_TAG);
+        // if (uart_read_t(TASK_TAG) != FNS_BUF_EMPTY) continue;
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
-static FnState uart_write_t(const char* logName)
+static Result uart_write_t(const char* logName)
 {
-    if (uart_enable != true) return FNS_INVALID;
+    if (uart_enable != true) return RESULT_ERROR(RES_ERR_INVALID);;
     vec_rm_all(&uart_tr_buf);
-    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&uart_tr_buf, UART_START_CODE));
-    ERROR_CHECK_FNS_RETURN(connect_trcv_buf_pop(&uart_tr_pkt_buf, &uart_tr_buf));
-    ERROR_CHECK_FNS_RETURN(vec_byte_push_byte(&uart_tr_buf, UART_END_CODE));
+    RESULT_CHECK_RET_RES(vec_byte_push_byte(&uart_tr_buf, UART_START_CODE));
+    RESULT_CHECK_RET_RES(connect_trcv_buf_pop(&uart_tr_pkt_buf, &uart_tr_buf));
+    RESULT_CHECK_RET_RES(vec_byte_push_byte(&uart_tr_buf, UART_END_CODE));
     int len = uart_write_bytes(STM32_UART, uart_tr_buf.data, uart_tr_buf.len);
-    if (len <= 0) return FNS_FAIL;
+    if (len <= 0) return RESULT_ERROR(RES_ERR_FAIL);
     ESP_LOGI(logName, "Wrote %d bytes", len);
-    return FNS_OK;
+    return RESULT_OK(NULL);
 }
 
-static FnState uart_tr_pkt_proc(void)
+static Result uart_tr_pkt_proc(void)
 {
     VecByte vec_byte;
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
-    ERROR_CHECK_FNS_WRI_PUSH(vec_byte_push_byte(&vec_byte, CMD_DATA_B0_START),
-        connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
+    RESULT_CHECK_RET_RES(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
+    // ERROR_CHECK_FNS_WRI_PUSH(vec_byte_push_byte(&vec_byte, CMD_DATA_B0_START),
+    //     connect_trcv_buf_push(&uart_tr_pkt_buf, &vec_byte), vec_byte_free(&vec_byte));
     vec_byte_free(&vec_byte);
-    return FNS_OK;
+    return RESULT_OK(NULL);
 }
 
 /**
@@ -78,13 +80,13 @@ static FnState uart_tr_pkt_proc(void)
  * @param count 單次最大處理封包數量 (input maximum number of packets to process per time)
  * @return void
  */
-static FnState uart_re_pkt_proc(size_t count)
+static Result uart_re_pkt_proc(size_t count)
 {
     VecByte vec_byte;
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
+    RESULT_CHECK_RET_RES(vec_byte_new(&vec_byte, UART_VEC_BYTE_CAP));
     for (size_t i = 0; i < count; i++)
     {
-        if (ERROR_CHECK_FNS_RAW(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte))) break;
+        if (RESULT_CHECK_RAW(connect_trcv_buf_pop(&uart_rv_pkt_buf, &vec_byte))) break;
         uint8_t code = vec_byte.data[vec_byte.head];
         vec_rm_range(&vec_byte, 0, 1);
         switch (code)
@@ -93,7 +95,7 @@ static FnState uart_re_pkt_proc(size_t count)
         }
     }
     vec_byte_free(&vec_byte);
-    return FNS_OK;
+    return RESULT_OK(NULL);
 }
 
 static UNUSED_FNC void uart_data_task(void *arg)

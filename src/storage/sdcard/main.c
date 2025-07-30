@@ -42,9 +42,9 @@ static const char mount_point[] = MOUNT_POINT;
 //     return ESP_OK;
 // }
 
-FnState sd_mount(void)
+Result sd_mount(void)
 {
-    if (sd_card != NULL) return FNS_INVALID;
+    if (sd_card != NULL) return RESULT_ERROR(RES_ERR_INVALID);;
     sd_host.slot = SDSPI_DEFAULT_HOST;
     #ifndef SD_FIND_MAX_FREQ
     sd_host.max_freq_khz = 5000;
@@ -66,7 +66,7 @@ FnState sd_mount(void)
     esp_err_t ret = spi_bus_initialize(sd_host.slot, &bus_cfg, SDSPI_DEFAULT_DMA);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to initialize bus.");
-        return FNS_FAIL;
+        return RESULT_ERROR(RES_ERR_FAIL);
     }
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
@@ -84,30 +84,30 @@ FnState sd_mount(void)
             ESP_LOGE(TAG, "Failed to initialize the sd_card (%s). "
                      "Make sure SD sd_card lines have pull-up resistors in place.", esp_err_to_name(ret));
         }
-        return FNS_FAIL;
+        return RESULT_ERROR(RES_ERR_FAIL);
     }
     ESP_LOGI(TAG, "Filesystem mounted");
     sdmmc_card_print_info(stdout, sd_card);
-    return FNS_OK;
+    return RESULT_OK(NULL);
 }
 
-FnState sd_unmount(void)
+Result sd_unmount(void)
 {
-    if (sd_card == NULL) return FNS_INVALID;
+    if (sd_card == NULL) return RESULT_ERROR(RES_ERR_INVALID);;
     esp_vfs_fat_sdcard_unmount(mount_point, sd_card);
     sd_card = NULL;
     ESP_LOGI(TAG, "Card unmounted");
     spi_bus_free(sd_host.slot);
-    return FNS_OK;
+    return RESULT_OK(NULL);
 }
 
-FnState sd_format(void)
+Result sd_format(void)
 {
-    if (sd_card == NULL) return FNS_INVALID;
+    if (sd_card == NULL) return RESULT_ERROR(RES_ERR_INVALID);;
     esp_err_t ret = esp_vfs_fat_sdcard_format(mount_point, sd_card);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to format FATFS (%s)", esp_err_to_name(ret));
-        return FNS_FAIL;
+        return RESULT_ERROR(RES_ERR_FAIL);
     }
 
     // if (stat(file_foo, &st) == 0) {
@@ -116,7 +116,7 @@ FnState sd_format(void)
     // } else {
     //     ESP_LOGI(TAG, "file doesn't exist, formatting done");
     // }
-    return FNS_OK;
+    return RESULT_OK(NULL);
 }
 
 void sd_setup(void)

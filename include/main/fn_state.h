@@ -24,6 +24,8 @@ typedef enum ErrorType {
     RES_ERR_REMOVE_FAIL,
 } ErrorType;
 
+extern ErrorType last_error;
+
 typedef struct Result {
     bool is_ok;
     union {
@@ -32,85 +34,66 @@ typedef struct Result {
     } result;
 } Result;
 
+// RESULT_OK(NULL);
 #define RESULT_OK(_obj_) ((Result){.is_ok = true, .result.success = {.obj = (_obj_)}})
 
 #define RESULT_ERROR(_err_) ((Result){.is_ok = false, .result.error = (_err_)})
 
-#define RESULT_BOOL(_cond_) ((_cond_) ? RESULT_OK(NULL) : RESULT_ERROR(False))
+#define RESULT_BOOL(_cond_) ((_cond_) ? RESULT_OK(NULL) : RESULT_ERROR(RES_ERR_FAIL))
 
-#define CHECK_RESULT(res)           \
+#define RESULT_CHECK_RAW(res) (!(res).is_ok)
+
+#define RESULT_CHECK_SIMPLE(res)    \
     do {                            \
-        if (!(res).is_ok)           \
-        {                           \
+        if (RESULT_CHECK_RAW(res))  \
             return EXIT_FAILURE;    \
-        }                           \
     } while (0)
 
-#define CHECK_RES_CLEANUP(res)      \
-    do {                            \
-        ret = (res);                \
-        if (!ret.is_ok)             \
-            goto cleanup;           \
+    
+#define RESULT_CHECK_HANDLE(expr)           \
+    do {                                    \
+        Result res = (expr);                \
+        if (RESULT_CHECK_RAW(res))          \
+        {                                   \
+            last_error = res.result.error;  \
+            Error_Handler();                \
+        }                                   \
     } while (0)
 
 #define UNWRAP_RESULT(res)          \
     ({                              \
-        CHECK_RESULT(res);          \
+        RESULT_CHECK_HANDLE(res);   \
         (res).result.success.obj;   \
     })
 
-typedef uint8_t FnState;
-extern FnState last_error;
-#define FNS_INVALID         0xFF
-#define FNS_OK              0
-#define FNS_FAIL            1
-#define FNS_TIMEOUT         2
-#define FNS_BUF_EMPTY       3
-#define FNS_BUF_NOT_ENOU    4
-#define FNS_OVERFLOW        5
-#define FNS_NOT_FOUND       6
-#define FNS_NOT_MOVE        7
-#define FNS_ERR_OOM         8
-#define FNS_BUSY            9
-
-#define ERROR_CHECK_FNS_RAW(expr) ((expr) != FNS_OK)
-
-#define ERROR_CHECK_FNS_RETURN(expr)    \
-    do {                                \
-        FnState _err = (expr);          \
-        if (_err != FNS_OK)             \
-        {                               \
-            last_error = _err;          \
-            return _err;                \
-        }                               \
+#define RESULT_CHECK_RET_VOID(expr)         \
+    do {                                    \
+        Result res = (expr);                \
+        if (RESULT_CHECK_RAW(res))          \
+        {                                   \
+            last_error = res.result.error;  \
+            return;                         \
+        }                                   \
     } while (0)
 
-#define ERROR_CHECK_FNS_CLEANUP(expr)   \
-    do {                                \
-        result = (expr);                \
-        if (result != FNS_OK)           \
-            goto cleanup;               \
-    } while (0)
-    
-#define ERROR_CHECK_FNS_VOID(expr)  \
-    do {                            \
-        FnState _err = (expr);      \
-        if (_err != FNS_OK)         \
-        {                           \
-            last_error = _err;      \
-            return;                 \
-        }                           \
+#define RESULT_CHECK_RET_RES(expr)          \
+    do {                                    \
+        Result res = (expr);                \
+        if (RESULT_CHECK_RAW(res))          \
+        {                                   \
+            last_error = res.result.error;  \
+            return res;                     \
+        }                                   \
     } while (0)
 
-#define ERROR_CHECK_FNS_HANDLE(expr)    \
-    do {                                \
-        FnState _err = (expr);          \
-        if (_err != FNS_OK)             \
-        {                               \
-            last_error = _err;          \
-            ESP_LOGE(TAG, "ERR_H: %d", _err);\
-            Error_Handler();            \
-        }                               \
+#define RESULT_CHECK_CLEANUP(expr)              \
+    do {                                        \
+        result = (expr);                        \
+        if (RESULT_CHECK_RAW(result))          \
+        {                                       \
+            last_error = result.result.error;  \
+            goto cleanup;                       \
+        }                                       \
     } while (0)
 
 #ifdef AGV_STM32_DEVICE
@@ -142,11 +125,11 @@ void Error_Handler(void);
 #ifdef PRINCIPAL_PROGRAM
 #define ERROR_TIMEOUT_TIME_LIMIT (15*1000)
 
-typedef struct FnState_h
+typedef struct Result_h
 {
-    FnState vehicle_rotate_in_place;
-    FnState agv_forward_leave_strong_magnet;
-} FnState_h;
-extern FnState_h error_state;
-void timeout_error(uint32_t start_time, FnState *error_parameter);
+    Result vehicle_rotate_in_place;
+    Result agv_forward_leave_strong_magnet;
+} Result_h;
+extern Result_h error_state;
+void timeout_error(uint32_t start_time, Result *error_parameter);
 #endif

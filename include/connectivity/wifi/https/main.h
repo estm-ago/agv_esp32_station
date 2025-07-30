@@ -10,4 +10,6 @@ extern const httpd_uri_t ws;
 extern WSByteTrcvBuf https_trsm_pkt_buf;
 extern WSByteTrcvBuf https_recv_pkt_buf;
 
-FnState https_server_setup(void);
+extern int controller_fd;
+
+Result https_server_setup(void);

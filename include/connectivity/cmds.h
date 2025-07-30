@@ -26,8 +26,9 @@
 //      CMD_DATA_B3_VALUE                           // 資料編號(can)    // 目標ID(車輛位置)
 
 //----------------------------------------------------------------------------------------------------
-#define CMD_WHEEL_B0_CONTROL        (uint8_t)0x20   // 馬達控制
+#define CMD_WHEEL_B0_CONTROL        (uint8_t)0x20   // 馬達控制 // 控制socket
 
+#define CMD_SOCKET_CHECK            (uint8_t)0xFF
 #define CMD_WHEEL_B1_LEFT           (uint8_t)0x01   // 左
 #define CMD_WHEEL_B1_RIGHT          (uint8_t)0x02   // 右
 
@@ -61,9 +62,10 @@
 //----------------------------------------------------------------------------------------------------
 #define CMD_MAP_B0_CONTROL          (uint8_t)0x30   // 地圖控制
 
-#define CMD_MAP_B1_CHECK            (uint8_t)0x00
-#define CMD_MAP_B1_SET              (uint8_t)0x01
+#define CMD_MAP_B1_INFO             (uint8_t)0x00   // RFID
+#define CMD_MAP_B1_SET              (uint8_t)0x10
 
+//      CMD_MAP_B2_VALUE                            // UID
 #define CMD_MAP_B2_FORWARD          (uint8_t)0x00
 #define CMD_MAP_B2_BACKWARD         (uint8_t)0x01
 #define CMD_MAP_B2_LEFT             (uint8_t)0x02

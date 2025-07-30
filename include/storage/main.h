@@ -22,6 +22,6 @@ extern FileData stg_arm_elbow_top_angle;
 extern FileData stg_arm_wrist_angle;
 extern FileData stg_arm_finger_angle;
 
-FnState storage_setup(void);
-FnState storage_store_data(FileData* file_data);
+Result storage_setup(void);
+Result storage_store_data(FileData* file_data);
 void storage_loop(void);

@@ -52,39 +52,39 @@ FileData stg_arm_finger_angle = {
     .type = sizeof(uint8_t),
 };
 
-static FnState file_buf_init(FileData* file_data)
+static Result file_buf_init(FileData* file_data)
 {
     FileHeader file_header = {
         .cap = 300,
         .type = file_data->type,
     };
-    ERROR_CHECK_FNS_RETURN(file_new(file_data->path, &file_header));
-    ERROR_CHECK_FNS_RETURN(vec_byte_new(&file_data->buffer, file_data->type * STORAGE_BUF_MAX));
-    return FNS_OK;
+    RESULT_CHECK_RET_RES(file_new(file_data->path, &file_header));
+    RESULT_CHECK_RET_RES(vec_byte_new(&file_data->buffer, file_data->type * STORAGE_BUF_MAX));
+    return RESULT_OK(NULL);
 }
 
-FnState storage_setup(void)
+Result storage_setup(void)
 {
     sd_setup();
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_left_speed));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_left_duty));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_right_speed));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_wheel_right_duty));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_bottom_angle));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_shoulder_angle));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_elbow_btm_angle));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_elbow_top_angle));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_wrist_angle));
-    ERROR_CHECK_FNS_HANDLE(file_buf_init(&stg_arm_finger_angle));
-    return FNS_OK;
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_wheel_left_speed));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_wheel_left_duty));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_wheel_right_speed));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_wheel_right_duty));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_arm_bottom_angle));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_arm_shoulder_angle));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_arm_elbow_btm_angle));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_arm_elbow_top_angle));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_arm_wrist_angle));
+    RESULT_CHECK_HANDLE(file_buf_init(&stg_arm_finger_angle));
+    return RESULT_OK(NULL);
 }
 
-FnState storage_store_data(FileData* file_data)
+Result storage_store_data(FileData* file_data)
 {
-    if (file_data->buffer.len < STORAGE_BUF_TRI) return FNS_OK;
+    if (file_data->buffer.len < STORAGE_BUF_TRI) return RESULT_OK(NULL);
     // ESP_LOGI(TAG, "buffer data >>>");
     // ESP_LOG_BUFFER_HEXDUMP(TAG, file_data->buffer.data, file_data->buffer.len, ESP_LOG_INFO);
-    FnState err = file_data_add(file_data->path, &file_data->buffer);
+    Result err = file_data_add(file_data->path, &file_data->buffer);
     vec_rm_all(&file_data->buffer);
     // VecByte vec_byte;
     // vec_byte_new(&vec_byte, file_data->type * 20);

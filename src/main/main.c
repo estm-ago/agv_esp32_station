@@ -23,13 +23,13 @@ void memory_monitor_task(void* pvParameters) {
         // 最大連續可分配區块 (bytes)
         size_t largest_block   = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
         // PSRAM（若有接外部 PSRAM）剩餘
-        size_t free_psram      = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+        // size_t free_psram      = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 
-        ESP_LOGI(TAG, "Heap free: %u  |  Min free: %u  |  Largest: %u",
+        ESP_LOGI(TAG, "Heap free: %u | Min free: %u | Largest: %u",
                  free_heap, min_free_heap, largest_block);
-        ESP_LOGI(TAG, "PSRAM free: %u", free_psram);
+        // ESP_LOGI(TAG, "PSRAM free: %u", free_psram);
 
-        vTaskDelay(pdMS_TO_TICKS(5000));  // 每秒更新一次
+        vTaskDelay(pdMS_TO_TICKS(1000));  // 每秒更新一次
     }
 }
 
